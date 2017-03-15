@@ -7,14 +7,16 @@ var MongoClient = require('mongodb').MongoClient;
 var logger = new (winston.Logger)({
 transports: [
   new (winston.transports.Console)(),
-  new (winston.transports.File)({ filename: '/var/log/inoodle-crawler.log' })
+  new (winston.transports.File)({ filename: '/tmp/inoodle-crawler.log' })
 ]
 });
 
 ( () => {
 	logger.info('process has started');
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-	MongoClient.connect("mongodb://localhost:27017/test", (err, db) => {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+	MongoClient.connect(
+    'mongodb://admin160317:ADmin160317@ds131510.mlab.com:31510/inoodle2017',
+    (err, db) => {
 	  if(!err) {
 	    logger.info('database is connected');
       	var options = {

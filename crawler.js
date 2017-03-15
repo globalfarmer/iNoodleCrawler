@@ -7,7 +7,7 @@ var MongoClient = require('mongodb').MongoClient;
 var logger = new (winston.Logger)({
 transports: [
   new (winston.transports.Console)(),
-  new (winston.transports.File)({ filename: './crawler.log' })
+  new (winston.transports.File)({ filename: '/var/log/inoodle-crawler.log' })
 ]
 });
 
@@ -48,7 +48,7 @@ transports: [
 		    });
 
         req.end();
-	    }, 5000);
+	    }, 10000);
 	  }
 	  else {
 	  	logger.error(JSON.stringify(error));

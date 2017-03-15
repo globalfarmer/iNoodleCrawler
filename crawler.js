@@ -1,4 +1,6 @@
 // We need this to build our post string
+var env = process.env.NODE_ENV || "development";
+var config = require('./config.json')[env];
 var https = require('https');
 var fs = require('fs');
 var winston = require('winston');
@@ -13,9 +15,11 @@ transports: [
 
 ( () => {
 	logger.info('process has started');
+  logger.info(env + " " + JSON.stringify(config));
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  logger.info(process.env.NODE_ENV);
 	MongoClient.connect(
-    'mongodb://admin160317:ADmin160317@ds131510.mlab.com:31510/inoodle2017',
+    config.db,
     (err, db) => {
 	  if(!err) {
 	    logger.info('database is connected');

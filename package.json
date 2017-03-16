@@ -4,6 +4,7 @@
   "description": "README.md",
   "main": "crawler.js",
   "scripts": {
+    "start": "NODE_ENV=production node crawler.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

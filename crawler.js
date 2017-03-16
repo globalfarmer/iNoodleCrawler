@@ -22,7 +22,7 @@ transports: [
     config.db,
     (err, db) => {
 	  if(!err) {
-	    logger.info('database is connected');
+	    logger.info('connecting '+config.db);
       	var options = {
 	    	host: '112.137.129.87',
 	      	port: 443,

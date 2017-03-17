@@ -7,7 +7,39 @@
     },
     "resource":
     {
-
+      "scoreboard":
+      {
+        "host": "",
+        "port": "",
+        "method": "POST"
+      },
+      "courseClass":
+      {
+        "host": "",
+        "port": "",
+        "method": "GET"
+      },
+      "slot":
+      {
+        "host": "112.137.129.87",
+        "port": "443",
+        "method": "GET"
+      },
+      "student":
+      {
+      },
+      "announce":
+      {
+        "host": "",
+        "port": "",
+        "method": "GET"
+      },
+      "finalTestSession":
+      {
+        "host": "",
+        "port": "",
+        "method": "GET"
+      }
     }
   },
   "development":
@@ -20,12 +52,9 @@
     {
       "scoreboard":
       {
-        "options" :
-        {
-          "host": "",
-          "port": "",
-          "method": "POST"
-        }
+        "host": "",
+        "port": "",
+        "method": "POST"
       },
       "courseClass":
       {

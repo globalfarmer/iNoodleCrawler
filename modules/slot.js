@@ -4,6 +4,7 @@ var xmldom = require('xmldom');
 var DOMParser = xmldom.DOMparser;
 var logger = global.iNoodle.logger;
 var db = global.iNoodle.db;
+var testUtil = require('./testUtil.js');
 // module contain 4 method
 // run: main flow of this module
 // crawl: request and get back raw data(html data)
@@ -51,12 +52,7 @@ module.exports = {
         logger.info("[SLOT] crawl_onEnd_"+this.nextCrawler);
         this.parse().update();
         if( iNoodle.env === 'development') {
-          fs.writeFile(`public/${this.options.path.split('/').slice(-1)[0]}.html`, this.rawData, (err) => {
-            if( err )
-              logger.error(err);
-            else
-              logger.info(`writing successfully on ${this.options.path.split('/').slice(-1)[0]} in folder public`);
-          });
+          testUtil.saveIntoFile(`slot_${this.nextCrawler}.html`, this.rawData);
         }
         this.nextCrawler = (this.nextCrawler + 1) % this.reqDatas.length;
         setTimeout(this.run(), iNoodle.TIME_OUT);

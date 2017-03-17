@@ -17,7 +17,7 @@ transports:
 
 // modules
 var announce = require('./modules/announce.js');
-var courseClass = require('./modules/courseClass.js');
+var course = require('./modules/course.js');
 var finalTestSession = require('./modules/finalTestSession.js');
 var slot = require('./modules/slot.js');
 var student = require('./modules/student.js');
@@ -35,9 +35,9 @@ var scoreboard = require('./modules/scoreboard');
         logger.info(`[DB] connecting ${config.db.host} successfully`);
         iNoodle.db = db;
         // announce.initAndRun();
-        // courseClass.initAndRun();
+        course.initAndRun();
         // finalTestSession.initAndRun();
-        slot.init();
+        // slot.initAndRun();
         // student.init();
         // scoreboard.init();
       }

@@ -13,7 +13,7 @@
         "port": "",
         "method": "POST"
       },
-      "courseClass":
+      "course":
       {
         "host": "",
         "port": "",
@@ -56,7 +56,7 @@
         "port": "",
         "method": "POST"
       },
-      "courseClass":
+      "course":
       {
         "host": "",
         "port": "",

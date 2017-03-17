@@ -35,9 +35,9 @@ var scoreboard = require('./modules/scoreboard');
         logger.info(`[DB] connecting ${config.db.host} successfully`);
         iNoodle.db = db;
         // announce.initAndRun();
-        course.initAndRun();
+        // course.initAndRun();
         // finalTestSession.initAndRun();
-        // slot.initAndRun();
+        slot.init();
         // student.init();
         // scoreboard.init();
       }

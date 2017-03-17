@@ -1,0 +1,88 @@
+{
+  "production":
+  {
+    "db":
+    {
+      "host": "mongodb://admin160317:ADmin160317@ds131510.mlab.com:31510/inoodle2017"
+    },
+    "resource":
+    {
+      "scoreboard":
+      {
+        "host": "",
+        "port": "",
+        "method": "POST"
+      },
+      "course":
+      {
+        "host": "",
+        "port": "",
+        "method": "GET"
+      },
+      "slot":
+      {
+        "host": "112.137.129.87",
+        "port": "443",
+        "method": "GET"
+      },
+      "student":
+      {
+      },
+      "announce":
+      {
+        "host": "",
+        "port": "",
+        "method": "GET"
+      },
+      "finalTestSession":
+      {
+        "host": "",
+        "port": "",
+        "method": "GET"
+      }
+    }
+  },
+  "development":
+  {
+    "db":
+    {
+      "host": "mongodb://127.0.0.1:27017/inoodle2017"
+    },
+    "resource":
+    {
+      "scoreboard":
+      {
+        "host": "",
+        "port": "",
+        "method": "POST"
+      },
+      "course":
+      {
+        "host": "",
+        "port": "",
+        "method": "GET"
+      },
+      "slot":
+      {
+        "host": "112.137.129.87",
+        "port": "443",
+        "method": "GET"
+      },
+      "student":
+      {
+      },
+      "announce":
+      {
+        "host": "",
+        "port": "",
+        "method": "GET"
+      },
+      "finalTestSession":
+      {
+        "host": "",
+        "port": "",
+        "method": "GET"
+      }
+    }
+  }
+}

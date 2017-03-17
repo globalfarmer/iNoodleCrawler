@@ -1,3 +1,5 @@
+var fs = require('fs');
+var logger = iNoodle.logger;
 module.exports = {
   saveIntoFile: function(filename, data) {
     var today = new Date();

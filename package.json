@@ -25,6 +25,6 @@
   "dependencies": {
     "mongodb": "^2.2.24",
     "winston": "^2.3.1",
-    "cheerio" : "*"
+    "xmldom": "^0.1.27"
   }
 }

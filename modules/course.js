@@ -1,6 +1,7 @@
 var https = require('https');
 var logger = global.iNoodle.logger;
 var db = global.iNoodle.db;
+var cheerio = require('cheerio');
 var testUtil = require('./testUtil.js');
 // module contain 4 method
 // run: main flow of this module
@@ -21,7 +22,7 @@ module.exports = {
     },
     init: function() {
         this.reqDatas = [{
-            path: '/tkb/listbylist.php'
+            path: '/tkb'
         }];
         this.nextCrawler = 0;
         this.run();
@@ -44,18 +45,72 @@ module.exports = {
                     testUtil.saveIntoFile(`course_${this.nextCrawler}.html`, this.rawData);
                 }
                 this.nextCrawler = (this.nextCrawler + 1) % this.reqDatas.length;
-                setTimeout(this.run(), iNoodle.TIME_OUT);
+                //setTimeout(this.run(), iNoodle.TIME_OUT);
             });
         });
         req.end();
         return this;
     },
     parse: function() {
-        // var doc = (new DOMParser()).parseFromString(this.rawData);
+        var $ = cheerio.load(this.rawData);
+        var i = 1;
         this.data = [];
+
+        var table = $("[name='slt_mamonhoc_filter']").parent().parent().parent();
+        // logger.info(table.find('tr').eq(1).find('td').eq(1).text());
+
+        while (!(table.find('tr').eq(i).text() === "")) {
+            code = table.find('tr').eq(i).find('td').eq(1).text();
+            name = table.find('tr').eq(i).find('td').eq(2).text();
+            TC = table.find('tr').eq(i).find('td').eq(3).text();
+            classNo = table.find('tr').eq(i).find('td').eq(4).text().split(" ");
+            classNo = classNo[1];
+            teacher = table.find('tr').eq(i).find('td').eq(5).text();
+            students = table.find('tr').eq(i).find('td').eq(6).text();
+            dayPart = table.find('tr').eq(i).find('td').eq(7).text();
+            dayInWeek = table.find('tr').eq(i).find('td').eq(8).text();
+            session = table.find('tr').eq(i).find('td').eq(9).text();
+            amphitheater = table.find('tr').eq(i).find('td').eq(10).text();
+            note = table.find('tr').eq(i).find('td').eq(11).text();
+
+            this.data[i - 1] = {
+                code: code,
+                name: name,
+                TC: TC,
+                classNo: classNo,
+                teacher: teacher,
+                students: students,
+                dayPart: dayPart,
+                dayInWeek: dayInWeek,
+                session: session,
+                amphitheater: amphitheater,
+                note: note
+            }
+            // logger.info(this.data[i - 1]);
+            i++;
+        }
         return this;
     },
     update: function() {
+        // var course = db.collection('course');
+        for (var i = 0; i < this.data.length; i++) {
+            db.collection('course').insertOne({
+                code: this.data[i].code,
+                name: this.data[i].name,
+                TC: this.data[i].TC,
+                classNo: this.data[i].classNo,
+                teacher: this.data[i].teacher,
+                students: this.data[i].students,
+                dayPart: this.data[i].dayPart,
+                dayInWeek: this.data[i].dayInWeek,
+                session: this.data[i].session,
+                amphitheater: this.data[i].amphitheater,
+                note: this.data[i].note
+            }, function(err, result) {
+                assert.equal(err, null);
+                logger.info("Inserted a document into the course collection.");
+            });
+        }
         return this;
     }
 }

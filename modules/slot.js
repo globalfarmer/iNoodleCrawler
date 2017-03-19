@@ -1,7 +1,5 @@
 var https = require('https');
 var fs = require('fs');
-var xmldom = require('xmldom');
-var DOMParser = xmldom.DOMparser;
 var logger = global.iNoodle.logger;
 var db = global.iNoodle.db;
 var testUtil = require('./testUtil.js');
@@ -62,7 +60,6 @@ module.exports = {
     return this;
   },
   parse: function() {
-    // var doc = (new DOMParser()).parseFromString(this.rawData);
     this.data = [];
     return this;
   },

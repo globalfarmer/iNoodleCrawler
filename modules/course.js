@@ -1,6 +1,5 @@
 var https = require('https');
 var logger = global.iNoodle.logger;
-var db = global.iNoodle.db;
 var cheerio = require('cheerio');
 var testUtil = require('./testUtil.js');
 // module contain 4 method
@@ -14,21 +13,21 @@ module.exports = {
     rawData: null,
     data: [],
     nextCrawler: null,
-    run: function() {
+    run: function(db) {
         logger.info('[COURSE_CLASS] start crawling');
         this.options = iNoodle.config.resource.course;
         this.options.path = this.reqDatas[this.nextCrawler].path;
-        this.crawl();
+        this.crawl(db);
     },
-    init: function() {
+    init: function(db) {
         this.reqDatas = [{
             path: '/tkb'
         }];
         this.nextCrawler = 0;
-        this.run();
+        this.run(db);
         return this;
     },
-    crawl: function() {
+    crawl: function(db) {
         logger.info("[COURSE_CLASS] crawl");
         console.log(this.options);
         this.rawData = '';
@@ -40,7 +39,7 @@ module.exports = {
             });
             response.on('end', () => {
                 logger.info("[COURSE_CLASS] crawl_onEnd_" + this.nextCrawler);
-                this.parse().update();
+                this.parse().update(db);
                 if (iNoodle.env === 'development') {
                     testUtil.saveIntoFile(`course_${this.nextCrawler}.html`, this.rawData);
                 }
@@ -89,9 +88,10 @@ module.exports = {
             // logger.info(this.data[i - 1]);
             i++;
         }
+        logger.info(i);
         return this;
     },
-    update: function() {
+    update: function(db) {
         // var course = db.collection('course');
         for (var i = 0; i < this.data.length; i++) {
             db.collection('course').insertOne({

@@ -16,7 +16,7 @@
       "course":
       {
         "host": "112.137.129.115",
-        "port": "80",
+        "port": "443",
         "method": "GET"
       },
       "slot":
@@ -30,8 +30,8 @@
       },
       "announce":
       {
-        "host": "",
-        "port": "",
+        "host": "uet.vnu.edu.vn",
+        "port": "80",
         "method": "GET"
       },
       "finalTestSession":
@@ -73,8 +73,8 @@
       },
       "announce":
       {
-        "host": "",
-        "port": "",
+        "host": "uet.vnu.edu.vn",
+        "port": "443",
         "method": "GET"
       },
       "finalTestSession":

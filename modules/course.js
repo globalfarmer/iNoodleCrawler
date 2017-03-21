@@ -1,7 +1,9 @@
 var https = require('https');
 var logger = global.iNoodle.logger;
+var db = undefined;
 var cheerio = require('cheerio');
 var testUtil = require('./testUtil.js');
+var assert = require('assert');
 // module contain 4 method
 // run: main flow of this module
 // crawl: request and get back raw data(html data)
@@ -13,21 +15,22 @@ module.exports = {
     rawData: null,
     data: [],
     nextCrawler: null,
-    run: function(db) {
+    run: function() {
         logger.info('[COURSE_CLASS] start crawling');
         this.options = iNoodle.config.resource.course;
         this.options.path = this.reqDatas[this.nextCrawler].path;
-        this.crawl(db);
+        this.crawl();
     },
-    init: function(db) {
+    init: function() {
+        db = iNoodle.db;
         this.reqDatas = [{
             path: '/tkb'
         }];
         this.nextCrawler = 0;
-        this.run(db);
+        this.run();
         return this;
     },
-    crawl: function(db) {
+    crawl: function() {
         logger.info("[COURSE_CLASS] crawl");
         console.log(this.options);
         this.rawData = '';
@@ -39,7 +42,7 @@ module.exports = {
             });
             response.on('end', () => {
                 logger.info("[COURSE_CLASS] crawl_onEnd_" + this.nextCrawler);
-                this.parse().update(db);
+                this.parse().update();
                 if (iNoodle.env === 'development') {
                     testUtil.saveIntoFile(`course_${this.nextCrawler}.html`, this.rawData);
                 }
@@ -62,8 +65,9 @@ module.exports = {
             code = table.find('tr').eq(i).find('td').eq(1).text();
             name = table.find('tr').eq(i).find('td').eq(2).text();
             TC = table.find('tr').eq(i).find('td').eq(3).text();
-            classNo = table.find('tr').eq(i).find('td').eq(4).text().split(" ");
-            classNo = classNo[1];
+            classNo = table.find('tr').eq(i).find('td').eq(4).text();
+            classNo = classNo.substring(code.length + 1, classNo.length);
+            //logger.info(classNo);
             teacher = table.find('tr').eq(i).find('td').eq(5).text();
             students = table.find('tr').eq(i).find('td').eq(6).text();
             dayPart = table.find('tr').eq(i).find('td').eq(7).text();
@@ -88,13 +92,11 @@ module.exports = {
             // logger.info(this.data[i - 1]);
             i++;
         }
-        logger.info(i);
         return this;
     },
-    update: function(db) {
-        // var course = db.collection('course');
+    update: function() {
         for (var i = 0; i < this.data.length; i++) {
-            db.collection('course').insertOne({
+            var item ={
                 code: this.data[i].code,
                 name: this.data[i].name,
                 TC: this.data[i].TC,
@@ -105,11 +107,10 @@ module.exports = {
                 dayInWeek: this.data[i].dayInWeek,
                 session: this.data[i].session,
                 amphitheater: this.data[i].amphitheater,
-                note: this.data[i].note
-            }, function(err, result) {
-                assert.equal(err, null);
-                logger.info("Inserted a document into the course collection.");
-            });
+                note: this.data[i].note,
+                updatetime: new Date()
+            }
+            db.collection('course').insert(item);
         }
         return this;
     }

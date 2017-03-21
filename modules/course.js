@@ -65,8 +65,9 @@ module.exports = {
             code = table.find('tr').eq(i).find('td').eq(1).text();
             name = table.find('tr').eq(i).find('td').eq(2).text();
             TC = table.find('tr').eq(i).find('td').eq(3).text();
-            classNo = table.find('tr').eq(i).find('td').eq(4).text().split(" ");
-            classNo = classNo[classNo.length-1];
+            classNo = table.find('tr').eq(i).find('td').eq(4).text();
+            classNo = classNo.substring(code.length + 1, classNo.length);
+            //logger.info(classNo);
             teacher = table.find('tr').eq(i).find('td').eq(5).text();
             students = table.find('tr').eq(i).find('td').eq(6).text();
             dayPart = table.find('tr').eq(i).find('td').eq(7).text();

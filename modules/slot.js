@@ -1,10 +1,10 @@
 var https = require('https');
 var fs = require('fs');
-var xmldom = require('xmldom');
-var DOMParser = xmldom.DOMparser;
-var logger = global.iNoodle.logger;
-var db = global.iNoodle.db;
+var cheerio = require('cheerio');
 var testUtil = require('./testUtil.js');
+var $ = undefined;
+var logger = undefined;
+var db = undefined;
 // module contain 4 method
 // run: main flow of this module
 // crawl: request and get back raw data(html data)
@@ -23,15 +23,17 @@ module.exports = {
     this.crawl();
   },
   init: function() {
+    db = global.iNoodle.db;
+    logger = global.iNoodle.logger;
     this.reqDatas =
     [
       {
         path:'/congdaotao/module/qldt/index.php?r=sinhvienLmh/'+
-             'admin&SinhvienLmh%5Bterm_id%5D=021&ajax=sinhvien-lmh-grid&SinhvienLmh_page=1&pageSize=30000'
+             'admin&SinhvienLmh%5Bterm_id%5D=021&ajax=sinhvien-lmh-grid&SinhvienLmh_page=1&pageSize=30'
       },
       {
         path:'/congdaotao/module/qldt/index.php?r=sinhvienLmh/'+
-             'admin&SinhvienLmh%5Bterm_id%5D=022&ajax=sinhvien-lmh-grid&SinhvienLmh_page=1&pageSize=30000'
+             'admin&SinhvienLmh%5Bterm_id%5D=022&ajax=sinhvien-lmh-grid&SinhvienLmh_page=1&pageSize=30'
       }
     ];
     this.nextCrawler = 0;
@@ -50,20 +52,29 @@ module.exports = {
       });
       response.on('end', () => {
         logger.info("[SLOT] crawl_onEnd_"+this.nextCrawler);
-        this.parse().update();
         if( iNoodle.env === 'development') {
           testUtil.saveIntoFile(`slot_${this.nextCrawler}.html`, this.rawData);
         }
         this.nextCrawler = (this.nextCrawler + 1) % this.reqDatas.length;
-        setTimeout(this.run(), iNoodle.TIME_OUT);
+        this.parse().update();
+        // setTimeout(this.run(), iNoodle.TIME_OUT);
       });
     });
     req.end();
     return this;
   },
   parse: function() {
-    // var doc = (new DOMParser()).parseFromString(this.rawData);
     this.data = [];
+    $ = cheerio.load(this.rawData);
+    var tables = $('table .items');
+    if( tables.length === 1) {
+      this.data = tables.parsetable();
+      console.log(this.data);
+    }
+    else
+    {
+      logger.info("[SLOT] [PARSE] have no table.items or more than one");
+    }
     return this;
   },
   update: function() {

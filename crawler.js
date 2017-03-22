@@ -37,7 +37,7 @@ var scoreboard = require('./modules/scoreboard');
         // announce.initAndRun();
         // course.initAndRun();
         // finalTestSession.initAndRun();
-        slot.init();
+        // slot.init();
         // student.init();
         // scoreboard.init();
       }

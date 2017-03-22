@@ -62,12 +62,9 @@ module.exports = {
         // logger.info(table.find('tr').eq(1).find('td').eq(1).text());
 
         while (!(table.find('tr').eq(i).text() === "")) {
-            code = table.find('tr').eq(i).find('td').eq(1).text();
             name = table.find('tr').eq(i).find('td').eq(2).text();
             TC = table.find('tr').eq(i).find('td').eq(3).text();
-            classNo = table.find('tr').eq(i).find('td').eq(4).text();
-            classNo = classNo.substring(code.length + 1, classNo.length);
-            //logger.info(classNo);
+            code = table.find('tr').eq(i).find('td').eq(4).text();
             teacher = table.find('tr').eq(i).find('td').eq(5).text();
             students = table.find('tr').eq(i).find('td').eq(6).text();
             dayPart = table.find('tr').eq(i).find('td').eq(7).text();
@@ -80,7 +77,6 @@ module.exports = {
                 code: code,
                 name: name,
                 TC: TC,
-                classNo: classNo,
                 teacher: teacher,
                 students: students,
                 dayPart: dayPart,
@@ -100,7 +96,6 @@ module.exports = {
                 code: this.data[i].code,
                 name: this.data[i].name,
                 TC: this.data[i].TC,
-                classNo: this.data[i].classNo,
                 teacher: this.data[i].teacher,
                 students: this.data[i].students,
                 dayPart: this.data[i].dayPart,

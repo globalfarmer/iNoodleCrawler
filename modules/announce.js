@@ -14,7 +14,6 @@ module.exports = {
     rawData: null,
     data: [],
     nextCrawler: null,
-    countAnnounce: 0,
     run: function() {
         logger.info('[ANNOUNCE] start crawling');
         this.options = iNoodle.config.resource.announce;
@@ -43,12 +42,11 @@ module.exports = {
             });
             response.on('end', () => {
                 logger.info("[ANNOUNCE] crawl_onEnd_" + this.nextCrawler);
-                this.parse();
+                this.parse().UpLoadTime(0);
                 if (iNoodle.env === 'development') {
                     //testUtil.saveIntoFile(`announce_${this.nextCrawler}.html`, this.rawData);
                 }
-                this.nextCrawler = (this.nextCrawler + 1) % this.reqDatas.length;
-                setTimeout(this.run(), iNoodle.TIME_OUT);
+                logger.info('done');
             });
         });
         req.end();
@@ -56,8 +54,7 @@ module.exports = {
     },
     parse: function() {
         var $ = cheerio.load(this.rawData);
-        count = $('.view-content').children().length;
-        logger.info(count);
+        var count = $('.view-content').children().length;
         this.data = [];
         for (var i = 1; i < count + 1; i++) {
             name = $('.views-row-' + i + ' .title_term').text();
@@ -68,9 +65,7 @@ module.exports = {
                 link: link,
                 uploadtime: null
             }
-            uploadtime = this.UpLoadTime(path, count, i-1);
         }
-       
         return this;
     },
     update: function() {
@@ -80,15 +75,18 @@ module.exports = {
                 name: this.data[i].name,
                 link: this.data[i].link,
                 uploadtime: new Date(this.data[i].uploadtime),
-                updatetime: new Date()
             }
             db.collection('announce').insert(item);
         }
+
+        this.nextCrawler = (this.nextCrawler + 1) % this.reqDatas.length;
+        setTimeout(this.run(), iNoodle.TIME_OUT + 5000);
         return this;
     },
-    UpLoadTime: function(path, count, i){
+    UpLoadTime: function(i){
         option = iNoodle.config.resource.announce;
-        option.path = path;
+        option.path = this.data[i].link.substring(iNoodle.config.resource.announce.host.length, this.data[i].link.length);
+        // logger.info(i, path);
         var data;
         var req = https.request(this.options, (response) => {
             response.setEncoding('utf8');
@@ -99,11 +97,13 @@ module.exports = {
                 var $ = cheerio.load(data);
                 var date = $('.submitted').text().replace('-', ' ').split(',');
                 this.data[i].uploadtime = date[1];
-                this.countAnnounce++;
-                if (this.countAnnounce == count - 1){
-                    this.countAnnounce = 0;
+                // logger.info(i + " " + this.data[i].uploadtime + " " + $('.submitted').text());
+                if (this.data.length - 1 == i){
                     this.update();
+                    return;
                 }
+                i++;
+                this.UpLoadTime(i);
             });
         });
         req.end();

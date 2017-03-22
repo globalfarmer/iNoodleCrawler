@@ -23,6 +23,15 @@ var slot = require('./modules/slot.js');
 var student = require('./modules/student.js');
 var scoreboard = require('./modules/scoreboard');
 
+// helpers
+var helpers = global.iNoodle.helpers = {};
+helpers.announceHelper = require('./helpers/announceHelper.js');
+helpers.courseHelper = require('./helpers/courseHelper.js');
+helpers.finalTestSessionHelper = require('./helpers/finalTestSessionHelper.js');
+helpers.courseHelper = require('./helpers/courseHelper.js');
+helpers.studentHelper = require('./helpers/studentHelper.js')
+helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
+
 ( () => {
   logger.info('[START] crawler start working');
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -37,7 +46,7 @@ var scoreboard = require('./modules/scoreboard');
         // announce.initAndRun();
         // course.initAndRun();
         // finalTestSession.initAndRun();
-        // slot.init();
+        slot.init();
         // student.init();
         // scoreboard.init();
       }

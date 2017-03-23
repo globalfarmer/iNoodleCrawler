@@ -3,6 +3,9 @@ var logger = global.iNoodle.logger;
 var db = undefined;
 var cheerio = require('cheerio');
 var testUtil = require('./testUtil.js');
+
+var Announce = require('../models/Announce');
+var announceHelper = require('../helpers/announceHelper');
 // module contain 4 method
 // run: main flow of this module
 // crawl: request and get back raw data(html data)
@@ -46,7 +49,6 @@ module.exports = {
                 if (iNoodle.env === 'development') {
                     //testUtil.saveIntoFile(`announce_${this.nextCrawler}.html`, this.rawData);
                 }
-                logger.info('done');
             });
         });
         req.end();
@@ -70,13 +72,16 @@ module.exports = {
     },
     update: function() {
         logger.info(1);
+        var announce;
         for (var i = 0; i < this.data.length; i++) {
-            var item ={
+            announce ={
                 name: this.data[i].name,
                 link: this.data[i].link,
                 uploadtime: new Date(this.data[i].uploadtime),
             }
-            db.collection('announce').insert(item);
+
+            announce = Announce.refine(announce);
+            announceHelper.saveIfNotExist(announce, i);
         }
 
         this.nextCrawler = (this.nextCrawler + 1) % this.reqDatas.length;

@@ -3,7 +3,9 @@ var logger = global.iNoodle.logger;
 var db = undefined;
 var cheerio = require('cheerio');
 var testUtil = require('./testUtil.js');
-var assert = require('assert');
+var Course = require('../models/Course');
+var courseHelper = require('../helpers/courseHelper');
+
 // module contain 4 method
 // run: main flow of this module
 // crawl: request and get back raw data(html data)
@@ -24,7 +26,8 @@ module.exports = {
     init: function() {
         db = iNoodle.db;
         this.reqDatas = [{
-            path: '/tkb'
+            path: '/tkb',
+            term: '2016-2017-2'
         }];
         this.nextCrawler = 0;
         this.run();
@@ -47,7 +50,7 @@ module.exports = {
                     testUtil.saveIntoFile(`course_${this.nextCrawler}.html`, this.rawData);
                 }
                 this.nextCrawler = (this.nextCrawler + 1) % this.reqDatas.length;
-                //setTimeout(this.run(), iNoodle.TIME_OUT);
+                setTimeout(this.run(), iNoodle.TIME_OUT);
             });
         });
         req.end();
@@ -60,52 +63,30 @@ module.exports = {
 
         var table = $("[name='slt_mamonhoc_filter']").parent().parent().parent();
         // logger.info(table.find('tr').eq(1).find('td').eq(1).text());
-
+        var course;
         while (!(table.find('tr').eq(i).text() === "")) {
-            name = table.find('tr').eq(i).find('td').eq(2).text();
-            TC = table.find('tr').eq(i).find('td').eq(3).text();
-            code = table.find('tr').eq(i).find('td').eq(4).text();
-            teacher = table.find('tr').eq(i).find('td').eq(5).text();
-            students = table.find('tr').eq(i).find('td').eq(6).text();
-            dayPart = table.find('tr').eq(i).find('td').eq(7).text();
-            dayInWeek = table.find('tr').eq(i).find('td').eq(8).text();
-            session = table.find('tr').eq(i).find('td').eq(9).text();
-            amphitheater = table.find('tr').eq(i).find('td').eq(10).text();
-            note = table.find('tr').eq(i).find('td').eq(11).text();
-
-            this.data[i - 1] = {
-                code: code,
-                name: name,
-                TC: TC,
-                teacher: teacher,
-                students: students,
-                dayPart: dayPart,
-                dayInWeek: dayInWeek,
-                session: session,
-                amphitheater: amphitheater,
-                note: note
+            course = [];
+            for (var j=1; j < 12; j++){
+                course.push(table.find('tr').eq(i).find('td').eq(j).text());
             }
+
+            this.data.push(course);
             // logger.info(this.data[i - 1]);
             i++;
         }
         return this;
     },
     update: function() {
+        var courseKey = {"code": 3, "name": 1, "TC": 2, "teacher": 4, "students": 5, "dayPart": 6, "dayInWeek": 7, "session": 8, "amphitheater": 9, "group": 10}
+        var course;
         for (var i = 0; i < this.data.length; i++) {
-            var item ={
-                code: this.data[i].code,
-                name: this.data[i].name,
-                TC: this.data[i].TC,
-                teacher: this.data[i].teacher,
-                students: this.data[i].students,
-                dayPart: this.data[i].dayPart,
-                dayInWeek: this.data[i].dayInWeek,
-                session: this.data[i].session,
-                amphitheater: this.data[i].amphitheater,
-                note: this.data[i].note,
-                updatetime: new Date()
-            }
-            db.collection('course').insert(item);
+            course = {};
+            Object.keys(courseKey).forEach( (k) => {
+                course[k] = this.data[i][courseKey[k]];
+            })
+            course.term = this.reqDatas[this.nextCrawler].term;
+            course = Course.refine(course);
+            courseHelper.saveIfNotExist(course, i);
         }
         return this;
     }

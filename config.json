@@ -79,9 +79,12 @@
       },
       "finalTestSession":
       {
-        "host": "",
-        "port": "",
-        "method": "GET"
+        "host": "112.137.129.87",
+        "port": "443",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
       }
     }
   }

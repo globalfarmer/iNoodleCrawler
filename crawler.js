@@ -36,7 +36,7 @@ var scoreboard = require('./modules/scoreboard');
         iNoodle.db = db;
         // announce.initAndRun();
         // course.initAndRun();
-        // finalTestSession.initAndRun();
+        finalTestSession.init();
         // slot.init();
         // student.init();
         // scoreboard.init();

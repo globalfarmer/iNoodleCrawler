@@ -11,7 +11,7 @@ var logger = global.iNoodle.logger = new (winston.Logger)({
 transports:
 [
   new (winston.transports.Console)(),
-  //new (winston.transports.File)({ filename: 'public/inoodle-crawler.log' })
+  new (winston.transports.File)({ filename: 'public/inoodle-crawler.log' })
 ]
 });
 
@@ -37,7 +37,7 @@ var scoreboard = require('./modules/scoreboard');
         // announce.initAndRun();
         course.init();
         // finalTestSession.initAndRun();
-        //slot.init();
+        // slot.init();
         // student.init();
         // scoreboard.init();
       }

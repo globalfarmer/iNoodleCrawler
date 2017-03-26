@@ -1,8 +1,8 @@
 var https = require('https');
 var fs = require('fs');
-var logger = global.iNoodle.logger;
-var db = global.iNoodle.db;
 var testUtil = require('./testUtil.js');
+var logger = undefined;
+var db = undefined;
 // module contain 4 method
 // run: main flow of this module
 // crawl: request and get back raw data(html data)

@@ -4,7 +4,7 @@
   "description": "README.md",
   "main": "crawler.js",
   "scripts": {
-    "start": "NODE_ENV=production node crawler.js",
+    "start": "node crawler.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -23,8 +23,9 @@
   },
   "homepage": "https://github.com/globalfarmer/iNoodleCrawler#readme",
   "dependencies": {
+    "cheerio": "^0.22.0",
+    "cheerio-tableparser": "^1.0.1",
     "mongodb": "^2.2.24",
-    "winston": "^2.3.1",
-    "cheerio": "^0.22.0"
+    "winston": "^2.3.1"
   }
 }

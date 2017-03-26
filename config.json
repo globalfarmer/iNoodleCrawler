@@ -52,9 +52,10 @@
     {
       "scoreboard":
       {
-        "host": "",
-        "port": "",
-        "method": "POST"
+        "host": "coltech.vnu.edu.vn",
+        "port": "80",
+        "method": "POST",
+        "path": "/news4st/test.php"
       },
       "course":
       {

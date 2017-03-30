@@ -60,7 +60,6 @@ module.exports = {
     return this;
   },
   parse: function() {
-    // var doc = (new DOMParser()).parseFromString(this.rawData);
     this.data = [];
     return this;
   },

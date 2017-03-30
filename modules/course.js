@@ -1,10 +1,15 @@
+// var TIME_OUT_A_DAY = 24 * 60 * 60 * 1000;
+var TIME_OUT_A_DAY = iNoodle.TIME_OUT;
+
 var https = require('https');
-var logger = global.iNoodle.logger;
-var db = undefined;
+var http = require('http');
 var cheerio = require('cheerio');
 var testUtil = require('./testUtil.js');
 var Course = require('../models/Course');
 var courseHelper = require('../helpers/courseHelper');
+
+var logger = global.iNoodle.logger;
+var db = undefined;
 
 // module contain 4 method
 // run: main flow of this module
@@ -25,10 +30,12 @@ module.exports = {
     },
     init: function() {
         db = iNoodle.db;
-        this.reqDatas = [{
+        this.reqDatas = [
+          {
             path: '/tkb',
             term: '2016-2017-2'
-        }];
+          }
+        ];
         this.nextCrawler = 0;
         this.run();
         return this;
@@ -37,7 +44,8 @@ module.exports = {
         logger.info("[COURSE_CLASS] crawl");
         console.log(this.options);
         this.rawData = '';
-        var req = https.request(this.options, (response) => {
+        var pro = this.options.port == 80 ? http : (this.options.port == 443 ? https : undefined);
+        var req = pro.request(this.options, (response) => {
             response.setEncoding('utf8');
             response.on('data', (chunk) => {
                 logger.info("[COURSE_CLASS] crawl_onData_" + this.nextCrawler);
@@ -50,13 +58,15 @@ module.exports = {
                     testUtil.saveIntoFile(`course_${this.nextCrawler}.html`, this.rawData);
                 }
                 this.nextCrawler = (this.nextCrawler + 1) % this.reqDatas.length;
-                setTimeout(this.run(), iNoodle.TIME_OUT);
+                setTimeout(() => this.run(), TIME_OUT_A_DAY);
             });
         });
         req.end();
         return this;
     },
     parse: function() {
+        logger.info("[COURSE_CLASS] parsing");
+
         var $ = cheerio.load(this.rawData);
         var i = 1;
         this.data = [];
@@ -77,7 +87,12 @@ module.exports = {
         return this;
     },
     update: function() {
-        var courseKey = {"code": 3, "name": 1, "TC": 2, "teacher": 4, "students": 5, "dayPart": 6, "dayInWeek": 7, "session": 8, "amphitheater": 9, "group": 10}
+        logger.info("[COURSE_CLASS] updating");
+
+        var courseKey = {
+          "code": 3, "name": 1, "TC": 2, "teacher": 4, "students": 5,
+          "dayPart": 6, "dayInWeek": 7, "session": 8, "amphitheater": 9, "group": 10
+        }
         var course;
         for (var i = 0; i < this.data.length; i++) {
             course = {};

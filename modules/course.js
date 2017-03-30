@@ -23,7 +23,7 @@ module.exports = {
     data: [],
     nextCrawler: null,
     run: function() {
-        logger.info('[COURSE_CLASS] start crawling');
+        logger.info('[COURSE] start crawling');
         this.options = iNoodle.config.resource.course;
         this.options.path = this.reqDatas[this.nextCrawler].path;
         this.crawl();
@@ -41,7 +41,7 @@ module.exports = {
         return this;
     },
     crawl: function() {
-        logger.info("[COURSE_CLASS] crawl");
+        logger.info("[COURSE] crawl");
         console.log(this.options);
         this.rawData = '';
         var pro = this.options.port == 80 ? http : (this.options.port == 443 ? https : undefined);
@@ -65,30 +65,27 @@ module.exports = {
         return this;
     },
     parse: function() {
-        logger.info("[COURSE_CLASS] parsing");
-
+        logger.info("[COURSE] parsing");
+        console.time('[COURSE] parsing');
         var $ = cheerio.load(this.rawData);
-        var i = 1;
         this.data = [];
 
         var table = $("[name='slt_mamonhoc_filter']").parent().parent().parent();
         // logger.info(table.find('tr').eq(1).find('td').eq(1).text());
         var course;
-        while (!(table.find('tr').eq(i).text() === "")) {
+        $('tr', table).each((row_idx, row) => {
             course = [];
-            for (var j=1; j < 12; j++){
-                course.push(table.find('tr').eq(i).find('td').eq(j).text());
-            }
-
+            $('td, th', row).each((col_idx, col) => {
+                course.push($(col).text().trim() || '');
+            })
             this.data.push(course);
-            // logger.info(this.data[i - 1]);
-            i++;
-        }
+        });
+        console.timeEnd('[COURSE] parsing')
         return this;
     },
     update: function() {
-        logger.info("[COURSE_CLASS] updating");
-
+        logger.info("[COURSE] updating");
+        console.time('[COURSE] updating');
         var courseKey = {
           "code": 3, "name": 1, "TC": 2, "teacher": 4, "students": 5,
           "dayPart": 6, "dayInWeek": 7, "session": 8, "amphitheater": 9, "group": 10
@@ -103,6 +100,7 @@ module.exports = {
             course = Course.refine(course);
             courseHelper.saveIfNotExist(course, i);
         }
+        console.timeEnd('[COURSE] updating')
         return this;
     }
 }

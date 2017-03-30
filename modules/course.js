@@ -1,5 +1,6 @@
-// var TIME_OUT_A_DAY = 24 * 60 * 60 * 1000;
-var TIME_OUT_A_DAY = iNoodle.TIME_OUT;
+const TIME_OUT_A_DAY = process.env.NODE_ENV == 'production' ?
+                        24 * 60 * 60 * 1000 :
+                        5000;
 
 var https = require('https');
 var http = require('http');
@@ -48,11 +49,11 @@ module.exports = {
         var req = pro.request(this.options, (response) => {
             response.setEncoding('utf8');
             response.on('data', (chunk) => {
-                logger.info("[COURSE_CLASS] crawl_onData_" + this.nextCrawler);
+                logger.info("[COURSE] crawl_onData_" + this.nextCrawler);
                 this.rawData += chunk;
             });
             response.on('end', () => {
-                logger.info("[COURSE_CLASS] crawl_onEnd_" + this.nextCrawler);
+                logger.info("[COURSE] crawl_onEnd_" + this.nextCrawler);
                 this.parse().update();
                 if (iNoodle.env === 'development') {
                     testUtil.saveIntoFile(`course_${this.nextCrawler}.html`, this.rawData);

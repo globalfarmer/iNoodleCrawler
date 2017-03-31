@@ -44,9 +44,9 @@ helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
         logger.info(`[DB] connecting ${config.db.host} successfully`);
         global.iNoodle.db = db;
         // announce.initAndRun();
-        course.init();
+        course.start();
         // finalTestSession.initAndRun();
-        slot.init();
+        // slot.init();
         // student.init();
         // scoreboard.init();
       }

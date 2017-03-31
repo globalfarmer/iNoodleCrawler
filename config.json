@@ -59,7 +59,7 @@
       "course":
       {
         "host": "cdcn14020208.herokuapp.com",
-        "port": "443",
+        "port": "80",
         "method": "GET"
       },
       "slot":

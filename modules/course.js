@@ -111,7 +111,7 @@ CourseCrawler.prototype.update = function() {
       course.term = this.term;
       bulk.find(course)
       .upsert()
-      .update({$set: course});
+      .update({$set: course, $currentDate: {updatedAt: true}});
   });
   bulk.execute((err, result) => {
     if(err) {

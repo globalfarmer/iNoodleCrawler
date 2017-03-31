@@ -5,11 +5,11 @@ var FIELD = [
   'tc',
   'teacher',
   'students',
+  'group',
   'daypart',
   'dayInWeek',
   'session',
   'amphitheater',
-  'group',
   'term',
   'createdAt',
   'updatedAt'

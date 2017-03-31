@@ -24,6 +24,7 @@ CourseCrawler.prototype.init = function(config) {
   this.config = inoodle.deepCopy(config) || {};
   this.rawData = '';
   this.data = [];
+  this.term = undefined;
   return this;
 }
 CourseCrawler.prototype.crawl = function() {
@@ -32,6 +33,12 @@ CourseCrawler.prototype.crawl = function() {
   var pro = this.config.options.port == 80 ?
             http :
             (this.config.options.port == 443 ? https : undefined);
+  if( pro == https) {
+    console.log("https");
+  }
+  else {
+    console.log('http');
+  }
   var req = pro.request(this.config.options, (response) => {
       response.setEncoding('utf8');
       response.on('data', (chunk) => {
@@ -43,7 +50,9 @@ CourseCrawler.prototype.crawl = function() {
           if (iNoodle.env === 'development') {
               testUtil.saveIntoFile(`course_${this.config.label}.html`, this.rawData);
           }
-          this.parse().update();
+          this.
+          parse().
+          update();
       });
   }).on('error', (err) => {
     logger.error(err);
@@ -57,9 +66,10 @@ CourseCrawler.prototype.crawl = function() {
 * @return this
 */
 CourseCrawler.prototype.getTerm = function(strTerm) {
-  console.log(`[COURSE] get term ${strTerm}`);
+  logger.info(`[COURSE] get term ${strTerm}`);
   var words = strTerm.split(' ');
-  this.config.term = [words[5], words[3]].join('-');
+  this.term = [words[5], words[2]].join('-');
+  logger.info(`[COURSE] ${this.term}`)
   return this;
 }
 CourseCrawler.prototype.parse = function() {
@@ -67,14 +77,18 @@ CourseCrawler.prototype.parse = function() {
   console.time('[COURSE] parsing');
   var $ = cheerio.load(this.rawData);
   this.getTerm($('h2').eq(0).text().trim());
-
   var table = $("[name='slt_mamonhoc_filter']").parent().parent().parent();
-  // logger.info(table.find('tr').eq(1).find('td').eq(1).text());
-  this.data = $('tr', table).map((row_idx, row) => {
-      return $('td, th', row).map((col_idx, col) => {
+  $('tr', table).each((row_idx, row) => {
+      var course = $('td', row).map((col_idx, col) => {
           return $(col).text().trim() || '';
-      })
+      }).get();
+      this.data.push(course);
   });
+  // console.log(`Data ${this.data.length}`);
+  // for(var i = 0; i < 10; i++) {
+    // console.log(`data index ${i}`);
+    // console.log(this.data[i]);
+  // }
   // ignore header
   this.data.shift();
   console.timeEnd('[COURSE] parsing')
@@ -87,17 +101,29 @@ CourseCrawler.prototype.update = function() {
     "code": 4, "name": 2, "tc": 3, "teacher": 5, "students": 6,
     "daypart": 7, "dayInWeek": 8, "session": 9, "amphitheater": 10, "group": 11
   }
-  var course;
-  for (var i = 0; i < this.data.length; i++) {
-      course = {};
+  var bulk = iNoodle.db.collection('course').initializeOrderedBulkOp();
+  this.data.forEach((data, data_idx) => {
+      var course = {};
       Object.keys(courseKey).forEach( (k) => {
-          course[k] = this.data[i][courseKey[k]];
+          course[k] = data[courseKey[k]];
       })
       course = Course.refine(course);
-      courseHelper.saveIfNotExist(course, i);
-  }
+      course.term = this.term;
+      bulk.find(course)
+      .upsert()
+      .update({$set: course});
+  });
+  bulk.execute((err, result) => {
+    if(err) {
+      logger.error(err);
+    }
+    else {
+      console.log(result);
+      logger.info(`[COURSE] update done`);
+    }
+    this.emit('end');
+  });
   console.timeEnd('[COURSE] updating');
-  this.emit('end');
   return this;
 }
 
@@ -107,34 +133,29 @@ CourseCrawler.prototype.update = function() {
 // parse: parse raw data into a array of object
 // update: update data on database
 module.exports = {
-    crawlers: [],
-    curCrawler: 0,
+    currentIndex: 0,
     reqDatas: [],
     start: function() {
       logger.info('[COURSE] start');
-        this.reqDatas = [
-          {
-            path: '/tkb'
-          }
-        ];
-        var config = {
-          options: inoodle.deepCopy(iNoodle.config.resource.course)
-        };
-        var crawler;
-        this.crawlers = this.reqDatas.map((reqData, idx) => {
-          config.options.path = reqData.path;
-          config.label = idx;
-          crawler = (new CourseCrawler()).
-                    init(config).
-                    on('end', () => this.run());
-          return crawler;
-        });
-        this.run();
+      this.reqDatas = [
+        {
+          path: '/tkb'
+        }
+      ];
+      this.run();
+      return this;
     },
     run: function() {
-      logger.info('[COURSE] run');
-      this.crawlers[this.curCrawler].crawl();
-      this.curCrawler = (this.curCrawler + 1) % this.crawlers.length;
+      var config = {
+        options: inoodle.deepCopy(iNoodle.config.resource.course)
+      };
+      config.options.path = this.reqDatas[this.currentIndex].path;
+      config.label = this.currentIndex;
+      var crawler = (new CourseCrawler()).
+                    init(config).
+                    on('end', () => setTimeout( () => this.run(), TIME_OUT_A_DAY));
+      crawler.crawl();
+      this.currentIndex = (this.currentIndex + 1) % this.reqDatas.length;
       return this;
     }
 }

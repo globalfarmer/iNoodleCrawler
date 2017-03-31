@@ -13,10 +13,9 @@
         "port": "",
         "method": "POST"
       },
-      "course":
-      {
-        "host": "112.137.129.115",
-        "port": "80",
+      "course": {
+        "host": "cdcn14020208.herokuapp.com",
+        "port": "443",
         "method": "GET"
       },
       "slot":
@@ -59,7 +58,7 @@
       "course":
       {
         "host": "cdcn14020208.herokuapp.com",
-        "port": "80",
+        "port": "443",
         "method": "GET"
       },
       "slot":

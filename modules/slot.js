@@ -1,139 +1,182 @@
+const TIME_OUT = process.env.NODE_ENV == 'production' ?
+                 60 * 1000 : // a minute
+                 10 * 1000;
+
 var https = require('https');
+var http = require('http');
 var fs = require('fs');
+var events = require('events');
+var util = require('util');
 var cheerio = require('cheerio');
 var testUtil = require('./testUtil.js');
-var $ = undefined;
+var inoodleUtil = require('../utils/inoodleUtil.js');
 var logger = undefined;
-var db = undefined;
 
 //models
 var Student = require('../models/Student.js');
 var Course = require('../models/Course.js');
 var Slot = require('../models/Slot.js');
 
-//helpers
-var slotHelper = require('../helpers/slotHelper.js');
+var SlotCrawler = function() {
+  events.EventEmitter.call(this);
+}
+util.inherits(SlotCrawler, events.EventEmitter);
+
+SlotCrawler.prototype.init = function(config)
+{
+  this.config = inoodleUtil.deepCopy(config);
+  this.rawData = '';
+  this.data = [];
+  this.term = undefined;
+  return this;
+}
+
+SlotCrawler.prototype.crawl = function()
+{
+  logger.info("[SLOTCRAWLER] crawl");
+  console.time('slot_crawl');
+  console.log(this.config.options);
+  var pro = this.config.options.port == 80 ?
+            http :
+            (this.config.options.port == 443 ? https: undefined);
+  var req = pro.request(this.config.options, (response) => {
+    response.setEncoding('utf8');
+    response.on('data', (chunk) => {
+      this.rawData += chunk;
+    });
+    response.on('end', () => {
+      logger.info("[SLOTCRAWLER] crawl_onEnd_"+this.config.label);
+      if( iNoodle.env === 'development') {
+        testUtil.saveIntoFile(`slot_${this.config.label}.html`, this.rawData);
+      }
+      console.timeEnd('slot_crawl');
+      this.parse().update();
+    });
+  });
+  req.end();
+  return this;
+}
+SlotCrawler.prototype.parse = function()
+{
+  logger.info('[SLOTCRAWLER] parse');
+  console.time('slot_parse');
+  $ = cheerio.load(this.rawData);
+  var tables = $('table.items');
+  // console.log(tables);
+  if( tables.length === 1) {
+    $('tr',tables).each( (row_idx, row) => {
+      var slot = [];
+      $('td', row).each( (col_idx, col) => {
+        // console.log(`    col ${$(col).text()}`);
+        slot.push($(col).text().trim() || "");
+      });
+      // console.log(slot);
+      this.data.push(slot);
+    });
+    this.data = this.data.slice(2);
+    logger.info(`number of slots ${this.data.length}`);
+  }
+  else
+  {
+    logger.info("[SLOTCRAWLER] parse: have no table.items or more than one");
+  }
+  console.timeEnd('slot_parse');
+  return this;
+}
+SlotCrawler.prototype.update = function()
+{
+  logger.info('[SLOTCRAWLER] update');
+  console.time('slot_update');
+  var studentKey = {"code": 1, "fullname": 2, "birthday": 3, "klass": 4};
+  var courseKey = {"code": 5, "name": 6, "group": 7, "tc": 8};
+  var bulk = iNoodle.db.collection('slot').initializeOrderedBulkOp();
+  this.data.forEach((slotData, idx) => {
+    // student
+    var student = {};
+    Object.keys(studentKey).forEach( (k) => {
+      student[k] = slotData[studentKey[k]];
+    });
+    student = Student.refine(student);
+    // console.log(student);
+    // course
+    var course = {};
+    Object.keys(courseKey).forEach( (k) => {
+      course[k] = slotData[courseKey[k]];
+    })
+    course.term = this.config.term;
+    course = Course.refine(course);
+    // console.log(course);
+    // slot
+    var slot = Slot.refine(
+      {
+        student: student,
+        course: course,
+        note: slotData[9]
+      }
+    );
+    // console.log(slot);
+    // console.log(`row ${idx}`);
+    bulk.find(slot)
+    .upsert()
+    .update({$set: slot, $currentDate: {updatedAt: true}});
+  });
+  bulk.execute((err, result) => {
+    if( err ) {
+      logger.info(err);
+    } else {
+      logger.info('update done');
+    }
+    console.timeEnd('slot_update');
+  });
+  return this;
+}
+
 // module contain 4 method
 // run: main flow of this module
 // crawl: request and get back raw data(html data)
 // parse: parse raw data into a array of object
 // update: update data on database
 module.exports = {
-  options: null,
-  reqDatas : [],
-  rawData: null,
-  data: [],
-  nextCrawler: null,
-  run: function() {
-    logger.info('[SLOT] start crawling');
-    this.options = iNoodle.config.resource.slot;
-    this.options.path = this.reqDatas[this.nextCrawler].path;
-    this.crawl();
+  currentIndex: 0,
+  reqDatas: [],
+  //TODO this method check condition for running automatically
+  isContinueToRun: function() {
+    return true;
   },
-  init: function() {
-    db = global.iNoodle.db;
+  run: function() {
+    logger.info('[SLOT_MODULE] run')
+    var config = {
+      options: inoodleUtil.deepCopy(iNoodle.config.resource.slot)
+    };
+    config.options.path = this.reqDatas[this.currentIndex].path;
+    config.term = this.reqDatas[this.currentIndex].term;
+    config.label = this.currentIndex;
+    (new (SlotCrawler)).init(config).crawl();
+    this.currentIndex = (this.currentIndex + 1) % this.reqDatas.length;
+    if( this.isContinueToRun() ) {
+      setTimeout(() => this.run(), TIME_OUT);
+    }
+    return this;
+  },
+  start: function() {
     logger = global.iNoodle.logger;
+    logger.info('[SLOT_MODULE] start');
+    // term
+    //
     this.reqDatas =
     [
       {
         path:'/congdaotao/module/qldt/index.php?r=sinhvienLmh/'+
-             'admin&SinhvienLmh%5Bterm_id%5D=021&ajax=sinhvien-lmh-grid&SinhvienLmh_page=1&pageSize=30000',
+             'admin&SinhvienLmh%5Bterm_id%5D=021&SinhvienLmh_page=50&pageSize=500',
         term: '2016-2017-1'
       },
       {
         path:'/congdaotao/module/qldt/index.php?r=sinhvienLmh/'+
-             'admin&SinhvienLmh%5Bterm_id%5D=022&ajax=sinhvien-lmh-grid&SinhvienLmh_page=1&pageSize=30000',
+             'admin&SinhvienLmh%5Bterm_id%5D=022&SinhvienLmh_page=50&pageSize=500',
         term: '2016-2017-2'
       }
     ];
-    this.nextCrawler = 0;
     this.run();
-    return this;
-  },
-  crawl: function() {
-    logger.info("[SLOT] crawl");
-    console.log(this.options);
-    this.rawData = '';
-    var req = https.request(this.options, (response) => {
-      response.setEncoding('utf8');
-      response.on('data', (chunk) => {
-        logger.info("[SLOT] crawl_onData_"+this.nextCrawler);
-        this.rawData += chunk;
-      });
-      response.on('end', () => {
-        logger.info("[SLOT] crawl_onEnd_"+this.nextCrawler);
-        if( iNoodle.env === 'development') {
-          testUtil.saveIntoFile(`slot_${this.nextCrawler}.html`, this.rawData);
-        }
-        this.parse().update();
-        this.nextCrawler = (this.nextCrawler + 1) % this.reqDatas.length;
-        setTimeout(this.run(), iNoodle.TIME_OUT);
-      });
-    });
-    req.end();
-    return this;
-  },
-  parse: function() {
-    this.data = [];
-    $ = cheerio.load(this.rawData);
-    var tables = $('table.items');
-    // console.log(tables);
-    if( tables.length === 1) {
-      var rows = $('tr',tables);
-      console.log(`number of rows ${rows.length}`);
-      var slot;
-      rows.each( (row_idx, row) => {
-        // console.log(`row ${row_idx}`);
-        slot = [];
-        $('th, td', row).each( (col_idx, col) => {
-          // console.log(`    col ${$(col).text()}`);
-          slot.push($(col).text().trim() || "");
-        });
-        // console.log(slot);
-        this.data.push(slot);
-      });
-      this.data = this.data.slice(2);
-      // console.log(this.data);
-      // console.log(`number of slots ${this.data.length}`);
-    }
-    else
-    {
-      logger.info("[SLOT][PARSE] have no table.items or more than one");
-    }
-    return this;
-  },
-  update: function() {
-    var studentKey = {"code": 1, "fullname": 2, "birthday": 3, "klass": 4};
-    var courseKey = {"code": 5, "name": 6, "group": 7, "tc": 8};
-    var student, course, slot;
-    this.data.forEach((slotData, idx) => {
-      // student
-      student = {};
-      Object.keys(studentKey).forEach( (k) => {
-        student[k] = slotData[studentKey[k]];
-      });
-      student = Student.refine(student);
-      // console.log(student);
-      // course
-      course = {};
-      Object.keys(courseKey).forEach( (k) => {
-        course[k] = slotData[courseKey[k]];
-      })
-      course.term = this.reqDatas[this.nextCrawler].term;
-      course = Course.refine(course);
-      // console.log(course);
-      // slot
-      slot = Slot.refine(
-        {
-          student: student,
-          course: course,
-          note: slotData[9]
-        }
-      );
-      // console.log(slot);
-      console.log(`row ${idx}`);
-      slotHelper.saveIfNotExist(slot, idx);
-    });
     return this;
   }
 }

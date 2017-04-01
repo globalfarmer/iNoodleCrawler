@@ -1,9 +1,12 @@
 var FIELD = [
+  '_id',
   'code',
   'fullname',
   'sex',
   'birthday',
-  'klass'
+  'klass',
+  'createdAt',
+  'updatedAt'
 ];
 module.exports = {
   refine: function(obj) {

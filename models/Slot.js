@@ -1,8 +1,11 @@
 var FIELD = [
+  '_id',
   'student',
   'course',
   'term',
-  'note'
+  'note',
+  'createdAt',
+  'updatedAt'
 ];
 module.exports = {
   refine: function(obj) {

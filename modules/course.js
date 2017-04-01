@@ -134,6 +134,7 @@ CourseCrawler.prototype.update = function() {
 module.exports = {
     currentIndex: 0,
     reqDatas: [],
+    //TODO this method check condition for running automatically
     isContinueToRun: function() {
       return true;
     },

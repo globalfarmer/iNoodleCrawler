@@ -1,6 +1,6 @@
-const TIME_OUT_A_DAY = process.env.NODE_ENV == 'production' ?
-                        24 * 60 * 60 * 1000 :
-                        5000;
+const TIME_OUT_AN_HOUR = process.env.NODE_ENV == 'production' ?
+                        60 * 60 * 1000 : // an hour
+                        10000;
 
 var https = require('https');
 var http = require('http');
@@ -42,7 +42,7 @@ CourseCrawler.prototype.crawl = function() {
   var req = pro.request(this.config.options, (response) => {
       response.setEncoding('utf8');
       response.on('data', (chunk) => {
-          logger.info(`[COURSE] crawl_onData ${this.config.label}`);
+          // logger.info(`[COURSE] crawl_onData ${this.config.label}`);
           this.rawData += chunk;
       });
       response.on('end', () => {
@@ -69,7 +69,7 @@ CourseCrawler.prototype.getTerm = function(strTerm) {
   logger.info(`[COURSE] get term ${strTerm}`);
   var words = strTerm.split(' ');
   this.term = [words[5], words[2]].join('-');
-  logger.info(`[COURSE] ${this.term}`)
+  logger.info(`[COURSE] ${this.term}`);
   return this;
 }
 CourseCrawler.prototype.parse = function() {
@@ -118,10 +118,9 @@ CourseCrawler.prototype.update = function() {
       logger.error(err);
     }
     else {
-      console.log(result);
+      // console.log(result);
       logger.info(`[COURSE] update done`);
     }
-    this.emit('end');
   });
   console.timeEnd('[COURSE] updating');
   return this;
@@ -135,6 +134,9 @@ CourseCrawler.prototype.update = function() {
 module.exports = {
     currentIndex: 0,
     reqDatas: [],
+    isContinueToRun: function() {
+      return true;
+    },
     start: function() {
       logger.info('[COURSE] start');
       this.reqDatas = [
@@ -142,20 +144,23 @@ module.exports = {
           path: '/tkb'
         }
       ];
+      this.pivot = (new Date()).getTime();
+      console.log(`[COURSE][RUN] pivot = ${this.pivot}`);
       this.run();
       return this;
     },
     run: function() {
+      console.log(`[COURSE][RUN] ${(new Date()).getTime() - this.pivot}`);
       var config = {
         options: inoodle.deepCopy(iNoodle.config.resource.course)
       };
       config.options.path = this.reqDatas[this.currentIndex].path;
       config.label = this.currentIndex;
-      var crawler = (new CourseCrawler()).
-                    init(config).
-                    on('end', () => setTimeout( () => this.run(), TIME_OUT_A_DAY));
-      crawler.crawl();
+      (new CourseCrawler()).init(config).crawl();
       this.currentIndex = (this.currentIndex + 1) % this.reqDatas.length;
+      if( this.isContinueToRun() ) {
+        setTimeout(() => this.run(), TIME_OUT_AN_HOUR);
+      }
       return this;
     }
 }

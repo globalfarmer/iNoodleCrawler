@@ -1,11 +1,11 @@
 // time out for crawling slot table
 const TIME_OUT = process.env.NODE_ENV == 'production' ?
-                 60 * 1000 : // 10 seconds
-                 30 * 1000;
+                 10 * 1000 : // 10 seconds
+                 5 * 1000;
 const DISCOVER_TIME_OUT = process.env.NODE_ENV == 'production' ?
-                          10 * 60 * 1000 : // 10 seconds
-                          5 * 60 * 1000;
-const PAGE_SIZE = 5000;
+                          20 * 60 * 1000 : // 10 seconds
+                          10 * 60 * 1000;
+const PAGE_SIZE = 500;
 var querystring = require('querystring');
 var https = require('https');
 var http = require('http');

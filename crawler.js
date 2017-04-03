@@ -32,7 +32,7 @@ helpers.courseHelper = require('./helpers/courseHelper.js');
 helpers.studentHelper = require('./helpers/studentHelper.js')
 helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
 
-( () => {
+(() => {
   logger.info('[START] crawler start working');
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 	MongoClient.connect(
@@ -56,4 +56,4 @@ helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
       }
     }
   );
-}());
+})();

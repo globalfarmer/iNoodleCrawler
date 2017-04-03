@@ -1,7 +1,9 @@
+// time out for crawling slot table
 const TIME_OUT = process.env.NODE_ENV == 'production' ?
                  60 * 1000 : // a minute
                  10 * 1000;
-
+const PAGE_SIZE = 1000;
+var querystring = require('querystring');
 var https = require('https');
 var http = require('http');
 var fs = require('fs');
@@ -85,50 +87,148 @@ SlotCrawler.prototype.parse = function()
 }
 SlotCrawler.prototype.update = function()
 {
-  logger.info('[SLOTCRAWLER] update');
-  console.time('slot_update');
-  var studentKey = {"code": 1, "fullname": 2, "birthday": 3, "klass": 4};
-  var courseKey = {"code": 5, "name": 6, "group": 7, "tc": 8};
-  var bulk = iNoodle.db.collection('slot').initializeOrderedBulkOp();
-  this.data.forEach((slotData, idx) => {
-    // student
-    var student = {};
-    Object.keys(studentKey).forEach( (k) => {
-      student[k] = slotData[studentKey[k]];
+    logger.info('[SLOTCRAWLER] update');
+    console.time('slot_update');
+    var studentKey = {"code": 1, "fullname": 2, "birthday": 3, "klass": 4};
+    var courseKey = {"code": 5, "name": 6, "group": 7, "tc": 8};
+    var bulk = iNoodle.db.collection('slot').initializeOrderedBulkOp();
+    this.data.forEach((slotData, idx) =>
+    {
+        // student
+        var student = {};
+        Object.keys(studentKey).forEach( (k) => {
+          student[k] = slotData[studentKey[k]];
+        });
+        student = Student.refine(student);
+        // console.log(student);
+        // course
+        var course = {};
+        Object.keys(courseKey).forEach( (k) => {
+          course[k] = slotData[courseKey[k]];
+        })
+        course.term = this.config.term;
+        course = Course.refine(course);
+        // console.log(course);
+        // slot
+        var slot = Slot.refine(
+          {
+            student: student,
+            course: course,
+            note: slotData[9]
+          }
+        );
+        // console.log(slot);
+        // console.log(`row ${idx}`);
+        bulk.find(slot)
+        .upsert()
+        .update({$set: slot, $currentDate: {updatedAt: true}});
     });
-    student = Student.refine(student);
-    // console.log(student);
-    // course
-    var course = {};
-    Object.keys(courseKey).forEach( (k) => {
-      course[k] = slotData[courseKey[k]];
-    })
-    course.term = this.config.term;
-    course = Course.refine(course);
-    // console.log(course);
-    // slot
-    var slot = Slot.refine(
-      {
-        student: student,
-        course: course,
-        note: slotData[9]
+    bulk.execute((err, result) => {
+      if( err ) {
+        logger.info(err);
+      } else {
+        logger.info('update done');
       }
-    );
-    // console.log(slot);
-    // console.log(`row ${idx}`);
-    bulk.find(slot)
-    .upsert()
-    .update({$set: slot, $currentDate: {updatedAt: true}});
-  });
-  bulk.execute((err, result) => {
-    if( err ) {
-      logger.info(err);
-    } else {
-      logger.info('update done');
-    }
-    console.timeEnd('slot_update');
-  });
+      console.timeEnd('slot_update');
+    });
+    return this;
+}
+
+var DiscoverSlot = function()
+{
+  events.EventEmitter.call(this);
+}
+util.inherits(DiscoverSlot, events.EventEmitter);
+DiscoverSlot.prototype.getTerm = function(str) {
+  var words = str.split(' ');
+  return [words[5], words[2]].join('-');
+}
+DiscoverSlot.prototype.getParams = function(obj) {
+  logger.info('[DISCOVER_SLOT] getParams');
+  return Object.keys(obj).map((key, idx) => {
+      return `${obj[key][0]}=${obj[key][1]}`;
+    }).join('&');
+}
+DiscoverSlot.prototype.init = function(opts, reqDatas)
+{
+  logger.info('[DISCOVER_SLOT] init');
+  console.log(opts);
+  var options = inoodleUtil.deepCopy(opts);
+  var rawData = '';
+  if( reqDatas.length == 0)
+  {
+    var pro = options.port == 80 ? http : (options.port == 443 ? https : undefined);
+    var req = pro.request(options, (response) => {
+      response.setEncoding('utf8');
+      response.on('data', (chunk) => {
+        rawData += chunk;
+      });
+      response.on('end', () => {
+        logger.info('[DISCOVER_SLOT] init onEnd');
+        if( iNoodle.env === 'development' ) {
+          testUtil.saveIntoFile('qldt.html', rawData)
+        }
+        var $ = cheerio.load(rawData);
+        var element = $('#SinhvienLmh_term_id');
+        $('option', element).each((idx, opt) =>
+        {
+          if( idx > 0 )
+          {
+            var config = {};
+            config.params =
+            {
+                'SinhvienLmh[term_id]': $(opt).attr('value'),
+                'SinhvienLmh_page': 1,
+                'pageSize': PAGE_SIZE
+            };
+            config.prePath = '/congdaotao/module/qldt/index.php?r=sinhvienLmh/admin&';
+            config.options = {
+              host: options.host,
+              method: "GET",
+              port: options.port,
+            };
+            config.options.path = config.prePath + querystring.stringify(config.params);
+            config.term = this.getTerm($(opt).text().trim());
+            this.crawl(config, reqDatas);
+          }
+        });
+      });
+    });
+    req.end();
+  }
+  setTimeout(() => (new DiscoverSlot()).init(options, reqDatas), 10*TIME_OUT);
   return this;
+}
+DiscoverSlot.prototype.crawl = function(config, reqDatas) {
+    logger.info('[DISCOVER_SLOT] crawl');
+    console.log(config);
+    var config = inoodleUtil.deepCopy(config);
+    var rawData = '';
+    var pro = config.options.port == 80 ?
+              http : (config.options.port == 443 ? https : undefined );
+    var req = pro.request(config.options, (response) => {
+      response.setEncoding('utf8');
+      response.on('data', (chunk) => {
+        rawData += chunk;
+      });
+      response.on('end', () => {
+        logger.info('[DISCOVER_SLOT] crawl onEnd');
+        if(iNoodle.env == 'development') {
+          testUtil.saveIntoFile(config.term + '.html', rawData);
+        }
+        var $ = cheerio.load(rawData);
+        var numberOfSlot = parseInt($('.summary').text().trim().split(' ').slice(-1));
+        console.log(`number of page ${(numberOfSlot+PAGE_SIZE-1)/PAGE_SIZE}`);
+        for(var i = 1; i <= (numberOfSlot + PAGE_SIZE - 1) / PAGE_SIZE; i++) {
+          var _config = inoodleUtil.deepCopy(config);
+          _config.params.SinhvienLmh_page = i;
+          _config.options.path = _config.prePath + querystring.stringify(_config.params);
+          reqDatas.push(_config);
+        }
+      });
+    });
+    req.end();
+    return this;
 }
 
 // module contain 4 method
@@ -137,46 +237,29 @@ SlotCrawler.prototype.update = function()
 // parse: parse raw data into a array of object
 // update: update data on database
 module.exports = {
-  currentIndex: 0,
-  reqDatas: [],
-  //TODO this method check condition for running automatically
-  isContinueToRun: function() {
-    return true;
-  },
-  run: function() {
-    logger.info('[SLOT_MODULE] run')
-    var config = {
-      options: inoodleUtil.deepCopy(iNoodle.config.resource.slot)
-    };
-    config.options.path = this.reqDatas[this.currentIndex].path;
-    config.term = this.reqDatas[this.currentIndex].term;
-    config.label = this.currentIndex;
-    (new (SlotCrawler)).init(config).crawl();
-    this.currentIndex = (this.currentIndex + 1) % this.reqDatas.length;
-    if( this.isContinueToRun() ) {
-      setTimeout(() => this.run(), TIME_OUT);
-    }
-    return this;
-  },
-  start: function() {
-    logger = global.iNoodle.logger;
-    logger.info('[SLOT_MODULE] start');
-    // term
-    //
-    this.reqDatas =
-    [
-      {
-        path:'/congdaotao/module/qldt/index.php?r=sinhvienLmh/'+
-             'admin&SinhvienLmh%5Bterm_id%5D=021&SinhvienLmh_page=50&pageSize=500',
-        term: '2016-2017-1'
-      },
-      {
-        path:'/congdaotao/module/qldt/index.php?r=sinhvienLmh/'+
-             'admin&SinhvienLmh%5Bterm_id%5D=022&SinhvienLmh_page=50&pageSize=500',
-        term: '2016-2017-2'
+    reqDatas: [],
+    //TODO this method check condition for running automatically
+    isAllowCrawlling: function() {
+      return true;
+    },
+    run: function() {
+      logger.info('[SLOT_MODULE] run');
+      if( this.reqDatas.length > 0 && this.isAllowCrawlling()) {
+        var config = this.reqDatas.shift();
+        console.log(config);
+        config.label = `${config.term}_page_${config.params.SinhvienLmh_page}.html`;
+        (new SlotCrawler()).init(config).crawl();
       }
-    ];
-    this.run();
-    return this;
-  }
+      setTimeout(() => this.run(), TIME_OUT);
+      return this;
+    },
+    start: function() {
+      logger = global.iNoodle.logger;
+      logger.info('[SLOT_MODULE] start');
+      var options = inoodleUtil.deepCopy(iNoodle.config.resource.slot);
+      options.path = '/congdaotao/module/qldt/';
+      (new DiscoverSlot()).init(options, this.reqDatas);
+      this.run();
+      return this;
+    }
 }

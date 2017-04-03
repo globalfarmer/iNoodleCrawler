@@ -1,6 +1,7 @@
 //
 global.iNoodle = {};
 global.iNoodle.env = process.env.NODE_ENV || "development";
+process.env.PORT = process.env.PORT || 5000
 global.iNoodle.TIME_OUT = 50000;
 var config = global.iNoodle.config = require('./config.json')[iNoodle.env];
 var winston = require('winston');

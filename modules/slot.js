@@ -1,8 +1,11 @@
 // time out for crawling slot table
 const TIME_OUT = process.env.NODE_ENV == 'production' ?
-                 60 * 1000 : // a minute
-                 10 * 1000;
-const PAGE_SIZE = 1000;
+                 60 * 1000 : // 10 seconds
+                 30 * 1000;
+const DISCOVER_TIME_OUT = process.env.NODE_ENV == 'production' ?
+                          10 * 60 * 1000 : // 10 seconds
+                          5 * 60 * 1000;
+const PAGE_SIZE = 5000;
 var querystring = require('querystring');
 var https = require('https');
 var http = require('http');
@@ -196,7 +199,7 @@ DiscoverSlot.prototype.init = function(opts, reqDatas)
     });
     req.end();
   }
-  setTimeout(() => (new DiscoverSlot()).init(options, reqDatas), 10*TIME_OUT);
+  setTimeout(() => (new DiscoverSlot()).init(options, reqDatas), DISCOVER_TIME_OUT);
   return this;
 }
 DiscoverSlot.prototype.crawl = function(config, reqDatas) {

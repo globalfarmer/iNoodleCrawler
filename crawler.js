@@ -32,8 +32,9 @@ helpers.courseHelper = require('./helpers/courseHelper.js');
 helpers.studentHelper = require('./helpers/studentHelper.js')
 helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
 
-( () => {
+(() => {
   logger.info('[START] crawler start working');
+  logger.info(`env ${iNoodle.env}`);
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 	MongoClient.connect(
     config.db.host,
@@ -44,7 +45,7 @@ helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
         logger.info(`[DB] connecting ${config.db.host} successfully`);
         global.iNoodle.db = db;
         // announce.initAndRun();
-        // course.start();
+        course.start();
         // finalTestSession.initAndRun();
         slot.start();
         // student.init();
@@ -56,4 +57,4 @@ helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
       }
     }
   );
-}());
+})();

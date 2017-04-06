@@ -3,7 +3,7 @@
   {
     "db":
     {
-      "host": "mongodb://admin160317:ADmin160317@ds131510.mlab.com:31510/inoodle2017?connectTimeoutMS=120000&socketTimeoutMS=120000"
+      "host": "mongodb://127.0.0.1:27017/inoodle2017"
     },
     "resource":
     {

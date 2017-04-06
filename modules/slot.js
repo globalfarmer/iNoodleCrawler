@@ -1,10 +1,11 @@
 // time out for crawling slot table
 const TIME_OUT = process.env.NODE_ENV == 'production' ?
                  2 * 60 * 1000 : // 10 seconds
-                 5 * 1000;
+                 10 * 1000;
 const DISCOVER_TIME_OUT = process.env.NODE_ENV == 'production' ?
                           30 * 60 * 1000 : // 10 seconds
                           10 * 60 * 1000;
+const ACTIVE_TIME = 10;
 const PAGE_SIZE = 5000;
 var querystring = require('querystring');
 var https = require('https');
@@ -154,8 +155,10 @@ DiscoverSlot.prototype.getParams = function(obj) {
 }
 DiscoverSlot.prototype.init = function(opts, reqDatas)
 {
+  // log
   logger.info('[DISCOVER_SLOT] init');
   console.log(opts);
+  // body
   var options = inoodleUtil.deepCopy(opts);
   var rawData = '';
   if( reqDatas.length == 0)
@@ -199,7 +202,6 @@ DiscoverSlot.prototype.init = function(opts, reqDatas)
     });
     req.end();
   }
-  setTimeout(() => (new DiscoverSlot()).init(options, reqDatas), DISCOVER_TIME_OUT);
   return this;
 }
 DiscoverSlot.prototype.crawl = function(config, reqDatas) {
@@ -243,11 +245,18 @@ module.exports = {
     reqDatas: [],
     //TODO this method check condition for running automatically
     isAllowCrawlling: function() {
-      return true;
+      var date = new Date();
+      return date.getHours() == ACTIVE_TIME;
+    },
+    start: function() {
+      logger = global.iNoodle.logger;
+      logger.info('[SLOT_MODULE] [START]');
+      this.init();
+      this.run();
     },
     run: function() {
-      logger.info('[SLOT_MODULE] run');
-      if( this.reqDatas.length > 0 && this.isAllowCrawlling()) {
+      logger.info('[SLOT_MODULE] [RUN]');
+      if( this.reqDatas.length > 0 ) {
         var config = this.reqDatas.shift();
         console.log(config);
         config.label = `${config.term}_page_${config.params.SinhvienLmh_page}.html`;
@@ -256,13 +265,20 @@ module.exports = {
       setTimeout(() => this.run(), TIME_OUT);
       return this;
     },
-    start: function() {
-      logger = global.iNoodle.logger;
-      logger.info('[SLOT_MODULE] start');
-      var options = inoodleUtil.deepCopy(iNoodle.config.resource.slot);
-      options.path = '/congdaotao/module/qldt/';
-      (new DiscoverSlot()).init(options, this.reqDatas);
-      this.run();
+    init: function() {
+      logger.info('[SLOT_MODULE] [INIT]');
+      if( this.isAllowCrawlling() )
+      {
+        logger.info(`[SLOT_MODULE] [INIT] active at ${ACTIVE_TIME}`);
+        var options = inoodleUtil.deepCopy(iNoodle.config.resource.slot);
+        options.path = '/congdaotao/module/qldt/';
+        (new DiscoverSlot()).init(options, this.reqDatas);
+      }
+      else
+      {
+        logger.info(`[SLOT_MODULE] [INIT] sleeping and waitting for ${ACTIVE_TIME}`);
+      }
+      setTimeout( () => this.init(), DISCOVER_TIME_OUT);
       return this;
     }
 }

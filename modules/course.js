@@ -1,7 +1,7 @@
-const TIME_OUT_AN_HOUR = process.env.NODE_ENV == 'production' ?
-                        60 * 60 * 1000 : // an hour
+const TIME_OUT = process.env.NODE_ENV == 'production' ?
+                        30 * 60 * 1000 : // 30 mins
                         10000;
-
+const ACTIVE_TIME = 10;
 var https = require('https');
 var http = require('http');
 var cheerio = require('cheerio');
@@ -135,8 +135,9 @@ module.exports = {
     currentIndex: 0,
     reqDatas: [],
     //TODO this method check condition for running automatically
-    isContinueToRun: function() {
-      return true;
+    isAllowCrawlling: function() {
+      var date = new Date();
+      return date.getHours() == ACTIVE_TIME;
     },
     start: function() {
       logger.info('[COURSE] start');
@@ -151,17 +152,26 @@ module.exports = {
       return this;
     },
     run: function() {
-      console.log(`[COURSE][RUN] ${(new Date()).getTime() - this.pivot}`);
-      var config = {
-        options: inoodle.deepCopy(iNoodle.config.resource.course)
-      };
-      config.options.path = this.reqDatas[this.currentIndex].path;
-      config.label = this.currentIndex;
-      (new CourseCrawler()).init(config).crawl();
-      this.currentIndex = (this.currentIndex + 1) % this.reqDatas.length;
-      if( this.isContinueToRun() ) {
-        setTimeout(() => this.run(), TIME_OUT_AN_HOUR);
+      // log
+      logger.info(`[COURSE][RUN] ${(new Date()).getTime() - this.pivot}`);
+      // body
+      if( this.isAllowCrawlling())
+      {
+        //log
+        logger.info(`[COURSE][RUN] active at ${ACTIVE_TIME}`);
+        var config = {
+          options: inoodle.deepCopy(iNoodle.config.resource.course)
+        };
+        config.options.path = this.reqDatas[this.currentIndex].path;
+        config.label = this.currentIndex;
+        (new CourseCrawler()).init(config).crawl();
+        this.currentIndex = (this.currentIndex + 1) % this.reqDatas.length;
       }
+      else
+      {
+        logger.info(`[COURSE][RUN] sleepping and waitting for ${ACTIVE_TIME}`);
+      }
+      setTimeout(() => this.run(), TIME_OUT);
       return this;
     }
 }

@@ -35,7 +35,7 @@ module.exports = {
   	final.reqDatas = [];
   	db.collection('slot').distinct('student.code').then(function (results) {
   		for (var i = 0; i < results.length; i++) {
-		    var data = 
+		    var data =
 		    {
 		        path: '/congdaotao/module/dsthi_new/index.php?r=lopmonhoc/napmonthi',
 		        keysearch: results[i]
@@ -50,7 +50,7 @@ module.exports = {
   crawl: function(keysearch) {
     logger.info("[FINAL_TEST_SESSION] crawl");
     var dataPost = querystring.stringify({
-      keysearch: '16020031'
+      keysearch: keysearch
     });
     console.log(this.options);
     this.rawData = '';

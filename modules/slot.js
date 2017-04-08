@@ -127,14 +127,15 @@ SlotCrawler.prototype.update = function()
         .upsert()
         .update({$set: slot, $currentDate: {updatedAt: true}});
     });
-    bulk.execute((err, result) => {
-      if( err ) {
-        logger.info(err);
-      } else {
-        logger.info('update done');
-      }
-      console.timeEnd('slot_update');
-    });
+    bulk.execute();
+    // bulk.execute((err, result) => {
+      // if( err ) {
+        // logger.info(err);
+      // } else {
+        // logger.info('update done');
+      // }
+      // console.timeEnd('slot_update');
+    // });
     return this;
 }
 

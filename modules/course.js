@@ -113,15 +113,16 @@ CourseCrawler.prototype.update = function() {
       .upsert()
       .update({$set: course, $currentDate: {updatedAt: true}});
   });
-  bulk.execute((err, result) => {
-    if(err) {
-      logger.error(err);
-    }
-    else {
+  bulk.execute();
+  // bulk.execute((err, result) => {
+    // if(err) {
+      // logger.error(err);
+    // }
+    // else {
       // console.log(result);
-      logger.info(`[COURSE] update done`);
-    }
-  });
+      // logger.info(`[COURSE] update done`);
+    // }
+  // });
   console.timeEnd('[COURSE] updating');
   return this;
 }

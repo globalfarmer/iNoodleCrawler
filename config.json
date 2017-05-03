@@ -3,7 +3,7 @@
   {
     "db":
     {
-      "host": "mongodb://admin160317:ADmin160317@ds131510.mlab.com:31510/inoodle2017"
+      "host": "mongodb://127.0.0.1:27017/inoodle2017"
     },
     "resource":
     {
@@ -13,10 +13,9 @@
         "port": "",
         "method": "POST"
       },
-      "course":
-      {
-        "host": "",
-        "port": "",
+      "course": {
+        "host": "cdcn14020208.herokuapp.com",
+        "port": "443",
         "method": "GET"
       },
       "slot":
@@ -58,8 +57,8 @@
       },
       "course":
       {
-        "host": "",
-        "port": "",
+        "host": "cdcn14020208.herokuapp.com",
+        "port": "443",
         "method": "GET"
       },
       "slot":

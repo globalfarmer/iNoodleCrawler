@@ -27,7 +27,7 @@ ScoreboardCrawler.prototype.download = function(scoreboard) {
       res.pipe(file);
       res.on('end', () => {
         logger.info(`have downloaded successfully ${outputFile} ${res.statusCode} ${typeof(res.statusCode)}`);
-        if( res.statusCode != 404) {
+        if( res.statusCode == 200) {
             scoreboard.file.available = true;
             iNoodle.db.collection('scoreboard')
             .update({'course.code': scoreboard.course.code, 'term': scoreboard.term}, {$set: scoreboard, $currentDate: {updatedAt:true}});

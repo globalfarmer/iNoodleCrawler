@@ -64,7 +64,7 @@ FinalTestCrawler.prototype.parse = function()
         {
             ftest.push($(col).text().trim() || "");
         });
-        console.log(`row ${row_idx} ${JSON.stringify(ftest)}`);
+        // console.log(`row ${row_idx} ${JSON.stringify(ftest)}`);
         this.data.push(ftest);
     });
     return this;
@@ -78,7 +78,7 @@ FinalTestCrawler.prototype.update = function()
         if( ftest.length < 14 )
         {
             console.log(this.config);
-            console.log(idx);
+            // console.log(idx);
             return undefined;
         }
         return {

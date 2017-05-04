@@ -1,206 +1,215 @@
+const DISCOVER_TIMEOUT = 1000 * 60 * 5;
+const SCOREBOARD_CRAWLER_TIMEOUT = 1000 * 5;
+const NUMBER_OF_LATEST = 500;
+
 var querystring = require('querystring');
 var http = require('http');
 var fs = require('fs');
 var cheerio = require('cheerio');
+var util = require('util');
+var events = require('events');
 var testUtil = require('./testUtil.js');
-var $ = undefined;
-var logger = undefined;
-var db = undefined;
-var files = [];
+var inoodleUtil = require('../utils/inoodleUtil');
+var logger;
 
-var loader = {
-  isLoadding: false,
-  start: function() {
-    console.log(`isLoadding ${this.isLoadding} files ${files.length}`);
-    logger.log(`isLoadding ${this.isLoadding} files ${files.length}`);
-    if(files.length > 0 && !this.isLoadding) {
-      this.isLoadding = true;
-      this.download();
-    }
-  },
-  download: function() {
-    var fileData = files.shift();
-    if( !fileData ) {
-      this.isLoadding = false;
-      return this;
-    }
-    logger.info(`have one file to download`);
-    if(!fs.existsSync(fileData.dir))
-      fs.mkdirSync(fileData.dir);
-    var filename = fileData.filename.split('/').join('_');
-    var outputFile = [fileData.dir, filename].join('/');
-    console.log(`start download file ${outputFile}`);
-    logger.info(`start download file ${outputFile}`);
+var ScoreboardCrawler = function()
+{
+    events.EventEmitter.call(this);
+}
+util.inherits(ScoreboardCrawler, events.EventEmitter);
+ScoreboardCrawler.prototype.download = function(scoreboard) {
+    logger.info(`[SCOREBOARD >> SCOREBOARD_CRAWLER >> DOWNLOAD] ${scoreboard.file.filename}`);
+    if(!fs.existsSync(scoreboard.file.path))
+      fs.mkdirSync(scoreboard.file.path);
+    var outputFile = [scoreboard.file.path, scoreboard.file.filename].join('/');
     var file = fs.createWriteStream(outputFile);
-    var request = http.get(fileData.href, (res) => {
+    var request = http.get(scoreboard.href, (res) => {
       res.pipe(file);
       res.on('end', () => {
-        console.log(`have downloaded successfully ${outputFile}`);
-        logger.info(`have downloaded successfully ${outputFile}`);
-        fileData.available = true;
-        db.collection('scoreboard').update({_id: fileData._id}, fileData);
-        setTimeout(() => this.download(), 5000);
-      });
-    }).on('error', (err) => {
-      console.log(err);
-      console.log("push back data cause error");
-      logger.info("push back data cause error");
-      var record = fileData;
-      if( record.available ) {
-        console.log("--------------------------------------------------------");
-        logger.info("--------------------------------------------------------");
-        record.available = false;
-        db.collection('scoreboard').update({_id: record._id}, record);
-      }
-      files.push(record);
-      this.download();
-    });
-  }
-}
-// module contain 4 method
-// run: main flow of this module
-// crawl: request and get back raw data(html data)
-// parse: parse raw data into a array of object
-// update: update data on database
-module.exports = {
-  rawData: null,
-  reqDatas: null,
-  nextCrawler: null,
-  data: null,
-  options: null,
-  init: function() {
-    logger = iNoodle.logger;
-    db = iNoodle.db;
-    logger.info('[SCOREBOARD][INIT] init module')
-    //path
-    //postData
-    //dir
-    this.reqDatas = [];
-    var kqdh = '';
-    var kqdhDir = 'kqdh';
-    // http.get('http://coltech.vnu.edu.vn/news4st/kqdh.php', (res) => {
-    http.get('http://localhost/kqdh.html', (res) => {
-      res.on('data', (chunk) => {
-        kqdh += chunk;
-      });
-      res.on('end', () => {
-        testUtil.saveIntoFile("kqdh.html", kqdh);
-        if(!fs.existsSync(kqdhDir))
-          fs.mkdirSync(kqdhDir);
-        $ = cheerio.load(kqdh);
-        var lstClass = $('select[name=lstClass]');
-        $('option', lstClass).each((opt_idx, opt) => {
-          console.log(`value option ${$(opt).attr('value')} ${opt_idx}`);
-          var postData = querystring.stringify({
-            lstClass: $(opt).attr('value').trim()
-            // output_format: 'html'
-          })
-          if($(opt).attr('value')) {
-            this.reqDatas.push({
-                postData: postData,
-                dir: [kqdhDir, $(opt).text().trim()].join('/'),
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Content-Length': Buffer.byteLength(postData)
-                }
-            });
-          };
-        });
-        console.log(this.reqDatas);
-        this.nextCrawler = 0;
-        this.options = iNoodle.config.resource.scoreboard;
-        this.run();
-      });
-    }).on('error', (e) => {
-      logger.error(e);
-      console.log("error: " + e);
-    })
-    return this;
-  },
-  run: function() {
-    logger.info('[SCOREBOARD][RUN] run module');
-    console.log(`nextCrawler ${this.nextCrawler}`);
-    console.log(`reqDatas.length ${this.reqDatas.length}`);
-    this.options.headers = this.reqDatas[this.nextCrawler].headers;
-    this.crawl();
-    return this;
-  },
-  crawl: function() {
-    this.rawData = '';
-    var postData = this.reqDatas[this.nextCrawler].postData;
-    var req = http.request(this.options, (res) => {
-      res.setEncoding('utf8');
-      res.on('data', (chunk) => {
-        this.rawData += chunk;
-      });
-      res.on('end', () => {
-        testUtil.saveIntoFile(`scoreboard_${this.nextCrawler}.html`, this.rawData);
-        this.parse().update();
-        // this.nextCrawler = (this.nextCrawler + 1) % this.reqDatas.length;
-        this.nextCrawler++;
-        if( this.nextCrawler < this.reqDatas.length ) {
-          setTimeout(() => this.run(), 10000);
+        logger.info(`have downloaded successfully ${outputFile} ${res.statusCode} ${typeof(res.statusCode)}`);
+        if( res.statusCode != 404) {
+            scoreboard.file.available = true;
+            iNoodle.db.collection('scoreboard')
+            .update({'course.code': scoreboard.course.code, 'term': scoreboard.term}, {$set: scoreboard, $currentDate: {updatedAt:true}});
         }
-      })
+      });
     }).on('error', (err) => {
-      logger.error(err.message);
-      console.log(err);
+      logger.error(err);
+    });
+}
+var DiscoverScoreboard = function()
+{
+    events.EventEmitter.call(this);
+}
+util.inherits(DiscoverScoreboard, events.EventEmitter);
+//antoànvàanninhmạng-int3307(lênmạng:22/01/2016,15:32)
+//@return {course: {}, uploadTime}
+DiscoverScoreboard.prototype.getInfo = function(label) {
+    while(true) {
+        var idx = label.indexOf('-');
+        if( idx != -1)
+            label = label.slice(idx+1);
+        else
+            break;
+    }
+    var code = label.slice(0, label.indexOf('('));
+    var labels = label.slice(label.indexOf(':')+1,-1).split(',');
+    var days = labels[0].split('/');
+    var times = labels[1].split(':');
+    var ret = {
+        course: {
+            code: code
+        },
+        uploadTime: new Date(days[2], days[1], days[0], times[0], times[1])
+    }
+    return ret;
+}
+DiscoverScoreboard.prototype.crawl = function(_config, reqDatas) {
+    logger.info('[SCOREBOARD >> DISCOVER_SCOREBOARD >> CRAWL]');
+    this.data = [];
+    var config = inoodleUtil.deepCopy(_config);
+    var postData = querystring.stringify(config.params);
+    config.options.headers['Content-Length'] = Buffer.byteLength(postData);
+    var pro = http;
+    var rawData = "";
+    if( config.options.port == 443 ) pro = https;
+    var req = pro.request(config.options, (res) => {
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => {
+            rawData += chunk;
+        });
+        res.on('end', () => {
+            if(iNoodle.env == 'development') {
+                testUtil.saveIntoFile(config.label+'.html', rawData);
+            }
+            $ = cheerio.load(rawData);
+            var tables = $('form[name=frm]').find("table");
+            if(tables.length === 2) {
+                var rows = $('a', tables[1]);
+                rows.each((row_idx, row) => {
+                    var info = this.getInfo($(row).text().toLowerCase().split(' ').join(''));
+                    this.data.push({
+                        href: ['http://coltech.vnu.edu.vn/news4st', $(row).attr('href')].join('/'),
+                        course: info.course,
+                        term: config.term,
+                        uploadTime: info.uploadTime
+                    });
+                });
+                this.parse(reqDatas);
+            }
+            else
+            {
+                logger.error('number of table abnormally');
+                console.log('number of table abnormally');
+            }
+        });
     });
     req.write(postData);
     req.end();
-    return this;
-  },
-  parse: function() {
-    logger.info("[SCOREBOARD][PARSE]");
-    this.data = [];
-    $ = cheerio.load(this.rawData);
-    var tables = $('form[name=frm]').find("table");
-    if(tables.length === 2) {
-      var rows = $('a', tables[1]);
-      rows.each((row_idx, row) => {
-        this.data.push({
-          href: ['http://coltech.vnu.edu.vn/news4st', $(row).attr('href')].join('/'),
-          filename: `${row_idx}_${$('b', row).text().trim()}.pdf`,
-          dir: this.reqDatas[this.nextCrawler].dir
-        })
-      });
-      console.log(this.data);
-    }
-    else
-    {
-      logger.error(`tables has more than 2 table`);
-      console.log(`tables has more than 2 table`);
-    }
-    return this;
-  },
-  update: function() {
-    logger.info("[SCOREBOARD][UPDATE]")
-    this.data.forEach((sb, idx) => {
-      db.collection('scoreboard')
-        .find(sb)
-        .limit(1)
-        .toArray((err, docs) => {
-          if( docs.length === 0 )
-          {
-            db.collection('scoreboard').insert(sb, (err, docs) => {
-              logger.info(`insert successfully then file will be downloaded soon ${[docs.ops[0].dir,docs.ops[0].filename].join('/')}`);
-              files.push(docs.ops[0]);
-              loader.start();
-            });
-          } else if( docs.length === 1 && !docs[0].available ) {
-            logger.info(`document is already exist but scoreboard file is still not available ${[docs[0].dir,docs[0].filename].join('/')}`);
-            files.push(docs[0]);
-            loader.start();
-          }
-          else {
-            console.log(`${docs.length}`);
-            console.log(docs);
-            console.log("[SCOREBOARD][UPDATE] not handle");
-          }
+}
+DiscoverScoreboard.prototype.parse = function(reqDatas) {
+    logger.info('[SCOREBOARD >> DISCOVER_SCOREBOARD >> PARSE]');
+    this.data = this.data.sort((e1, e2) => e2.uploadTime - e1.uploadTime);
+    this.data = this.data.slice(0, NUMBER_OF_LATEST);
+    // console.log(this.data);
+    this.data.forEach((sb) => {
+        iNoodle.db.collection('scoreboard').find({'course.code': sb.course.code, 'term': sb.term}).limit(1).toArray((err, results) =>
+        {
+            if( err)
+                logger.error(err);
+            else
+            {
+                sb.file = {
+                    available: false,
+                    filename: `${sb.course.code}_${sb.term}.pdf`,
+                    path: `public/scoreboard/${sb.term}`
+                };
+                if( results.length == 0) {
+                    sb.createdAt = sb.updatedAt = new Date();
+                    iNoodle.db.collection('scoreboard').insert(sb);
+                    reqDatas.push(sb);
+                }
+                else if(results[0].file.available == false)
+                {
+                    reqDatas.push(sb);
+                }
+            }
         });
     });
-    // console.log(files);
-    // files = [];
-    return this;
-  }
+};
+module.exports =
+{
+    reqDatas: [],
+    start: function() {
+        logger = iNoodle.logger;
+        logger.info('[SCOREBOARD >> START]');
+        this.discover().scoreboardCrawling();
+        return this;
+    },
+    getCurrentTerm: function(date) {
+        var now = date;
+        if( now.getMonth() < 8) {
+            var y = [parseInt(now.getFullYear())-1, now.getFullYear()].join('-');
+            if( now.getMonth() >= 3) {
+                return [['hkii',y].join(''), [y,'2'].join('-')];
+            }
+            return [['hki',y].join(''), [y,'1'].join('-')]
+        }
+        var y = [now.getFullYear(), parseInt(now.getFullYear())+1].join('-');
+        return [['hki',y].join(''), [y,'1'].join('-')];
+    },
+    discover: function() {
+        logger.info('[SCOREBOARD >> DISCOVER]');
+        var rawData = "";
+        http.get('http://www.coltech.vnu.edu.vn/news4st/kqdh.php', (res) => {
+            res.setEncoding('utf8');
+            res.on('data', (chunk) => {
+                rawData += chunk;
+            });
+            res.on('end', () => {
+                if( iNoodle.env === 'development') {
+                    testUtil.saveIntoFile('kqdh.html', rawData);
+                }
+                var $ = cheerio.load(rawData);
+                var lstClass = $('select[name=lstClass]');
+                var currentTerm = this.getCurrentTerm(new Date(2017,2));
+                // console.log(currentTerm);
+                $('option', lstClass).each((opt_idx, opt) => {
+                    // logger.info(`value option ${$(opt).text().trim()} ${$(opt).attr('value')} ${opt_idx}`);
+                    var title = ($(opt).text() || "").toLowerCase().split(" ").join('');
+                    if( title === currentTerm[0] )
+                    {
+                        var config =
+                        {
+                            params: {lstClass: $(opt).attr('value').trim() },
+                            options: {
+                                "host": "coltech.vnu.edu.vn",
+                                "port": "80",
+                                "method": "POST",
+                                "path": "/news4st/test.php",
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                }
+                            },
+                            label: currentTerm[0],
+                            term: currentTerm[1]
+                        };
+                            (new DiscoverScoreboard()).crawl(config, this.reqDatas);
+                        }
+                });
+            });
+        });
+        setTimeout(() => this.discover(), DISCOVER_TIMEOUT);
+        return this;
+    },
+    scoreboardCrawling: function() {
+        logger.info('[SCOREBOARD >> SCOREBOARD_CRAWLING]');
+        if( this.reqDatas.length > 0)
+        {
+            var scoreboard = this.reqDatas.shift();
+            (new ScoreboardCrawler()).download(scoreboard);
+        }
+        setTimeout(() => this.scoreboardCrawling(), SCOREBOARD_CRAWLER_TIMEOUT);
+        return this;
+    }
 }

@@ -1,36 +1,37 @@
 const DISCOVER_TIMEOUT = 1000 * 60 * 60;
-const FINAL_TEST_TIMEOUT = 1000 * 60;
+const FINAL_TEST_TIMEOUT = 1000 * 10;
+
+const ACTIVE_TIME = 3;
 
 var https = require('https');
+var http = require('http');
 var fs = require('fs');
 var testUtil = require('./testUtil.js');
-var logger;
-var db = undefined;
 var querystring = require('querystring');
 var cheerio = require('cheerio');
 var util = require('util');
 var events = require('events');
+var logger;
 
-var FinalTest = require('../models/FinalTest');
-var Course = require('../models/Course');
-var Students = require('../models/Students');
-var finalTestHelper = require('../helpers/finalTestHelper');
+var inoodleUtil = require('../utils/inoodleUtil');
 
-var FinalTestCrawler = function() {
+var FinalTestCrawler = function()
+{
   events.EventEmitter.call(this);
 }
 util.inherits(FinalTestCrawler, events.EventEmitter);
-FinalTestCrawler.prototype.init(config)
+FinalTestCrawler.prototype.init = function(config)
 {
+    logger.info("[FINAL_TEST_CRAWLER >> INIT");
     this.config = inoodleUtil.deepCopy(config);
     this.rawData = '';
     this.data = [];
     return this;
 }
-FinalTestCrawler.prototype.crawl()
+FinalTestCrawler.prototype.crawl = function()
 {
     logger.info("[FINAL_TEST_CRAWLER >> CRAWL");
-    console.log(this.config);
+    // console.log(this.config);
     var dataPost = querystring.stringify(this.config.params);
     var pro = http;
     if( this.config.options.port == 443 ) pro = https;
@@ -41,7 +42,7 @@ FinalTestCrawler.prototype.crawl()
       });
       response.on('end', () => {
         if( iNoodle.env === 'development') {
-          testUtil.saveIntoFile(this.config.label+'.html', this.rawData);
+          testUtil.saveIntoFile(`${this.config.label}.html`, this.rawData);
         }
         logger.info("[FINAL_TEST_CRAWLER >> CRAWL >> onEnd]");
         this.parse().update();
@@ -51,72 +52,85 @@ FinalTestCrawler.prototype.crawl()
     req.end();
     return this;
 }
-FinalTestCrawler.prototype.parse()
+FinalTestCrawler.prototype.parse = function()
 {
+    logger.info("[FINAL_TEST_CRAWLER >> PARSE");
     var $ = cheerio.load(this.rawData);
     var table = $('table.items tbody');
     $('tr', table).each((row_idx, row) =>
     {
-        var finaltest = [];
+        var ftest = [];
         $('td', row).each((col_idx, col) =>
         {
-            finaltest.push($(col).text().trim() || "");
+            ftest.push($(col).text().trim() || "");
         });
-        this.data.push(finaltest);
+        console.log(`row ${row_idx} ${JSON.stringify(ftest)}`);
+        this.data.push(ftest);
     });
     return this;
 }
-FinalTestCrawler.prototype.update()
+FinalTestCrawler.prototype.update = function()
 {
-    var bulk = iNoodle.collection('finaltest').initializeOrderedBulkOp();
-    var finaltests = this.data.map((finaltest, idx) =>
+    logger.info("[FINAL_TEST_CRAWLER >> UPDATE");
+    var bulk = iNoodle.db.collection('finaltest').initializeOrderedBulkOp();
+    var ftests = this.data.map((ftest, idx) =>
     {
-        return
+        if( ftest.length < 14 )
         {
+            console.log(this.config);
+            console.log(idx);
+            return undefined;
+        }
+        return {
             student:
             {
-                code: finaltest[1],
-                fullname: finaltest[2],
-                birthday: finaltest[3],
-                klass: finaltest[4]
+                code: ftest[1],
+                fullname: ftest[2],
+                birthday: ftest[3],
+                klass: ftest[4],
             },
             course:
             {
-                code: finaltest[6].split(' ').join(''),
-                name: finaltest[7],
+                code: ftest[6].split(' ').join(''),
+                name: ftest[7],
                 term: this.config.term
             },
-            seat: finaltest[5],
-            time: this.getFinalTestTime(finaltest[6], finaltest[7]),
-            sessionNo: finaltest[10],
+            seat: ftest[5],
+            time: this.getFinalTestTime(ftest[8], ftest[9]),
+            sessionNo: ftest[10],
             term: this.config.term,
-            room: finaltest[11],
-            area: finaltest[12],
-            type: finaltest[13]
+            room: ftest[11],
+            area: ftest[12],
+            type: ftest[13],
         };
     });
-    finaltests.forEach((finaltest, idx) => {
-        bulk.find
-        (
-            {
-                'student.code': finaltest.student.code,
-                'course.code': finaltest.course.code,
-                'term': finaltest.term
-            }
-        )
-        .upsert()
-        .update({$set: finaltest, $currentData: {updatedAt: true}});
+    ftests.forEach((ftest, idx) => {
+        if( ftest !== undefined)
+        {
+            bulk.find
+            (
+                {
+                    'student.code': ftest.student.code,
+                    'course.code': ftest.course.code,
+                    'term': ftest.term
+                }
+            )
+            .upsert()
+            .update({$set: ftest, $currentDate: {updatedAt: true}});
+        }
     });
-    bulk.execute();
+    if(bulk.length > 0)
+        bulk.execute();
     return this;
 }
-FinalTestCrawler.prototype.getFinalTestTime(day, time)
+FinalTestCrawler.prototype.getFinalTestTime = function(day, time)
 {
     var days = day.split('/');
     var times = time.split(':');
-    return new Date(days[2], days[1], days[0], times[0], times[1], 0, 0);
+    return new Date(days[2], parseInt(days[1])-1, days[0], times[0], times[1]);
 }
-module.exports = {
+module.exports =
+{
     reqDatas: [],
     lastDiscovery: undefined,
     //TODO this method check condition for running automatically
@@ -124,12 +138,14 @@ module.exports = {
     {
       var now = new Date();
       var discovered = (this.lastDiscovery !== undefined && now.getDay() == this.lastDiscovery.getDay());
-      if( now.getDay() % 3 == 0 && now.getHours() == ACTIVE_TIME && !discovered )
-      {
-          this.lastDiscovery = now;
-          return true;
-      }
-      return false;
+    //   console.log(now.getDay());
+    //   if( now.getDay() % 3 == 1 && now.getHours() == ACTIVE_TIME && !discovered )
+        if(this.lastDiscovery === undefined)
+        {
+            this.lastDiscovery = now;
+            return true;
+        }
+        return false;
     },
     start: function()
     {
@@ -150,8 +166,8 @@ module.exports = {
                 {
                     host: '112.137.129.87',
                     port: 443,
-                    path: 'congdaotao/module/dsthi_new',
-                    method: GET
+                    path: '/congdaotao/module/dsthi_new/',
+                    method: 'GET'
                 }
             };
             var pro = http;
@@ -177,9 +193,12 @@ module.exports = {
                         term = [termWords[8], '2'].join('-');
                     iNoodle.db.collection('slot').distinct('student.code', {'course.term': term}).then((codes) =>
                     {
+                        console.log('number of students ' + codes.length);
+                        // codes = codes.slice(0, 3);
+                        // console.log('number of stduents ' + codes.length);
+                        // codes = ['12020300'];
                         this.reqDatas = codes.map((code, idx) => {
-                            return
-                            {
+                            return {
                                 params:
                                 {
                                     keysearch: code
@@ -189,12 +208,16 @@ module.exports = {
                                     host: '112.137.129.87',
                                     method: 'POST',
                                     port: 443,
-                                    path: 'congdaotao/module/dsthi_new/index.php?r=lopmonhoc/napmonthi'
+                                    path: '/congdaotao/module/dsthi_new/index.php?r=lopmonhoc/napmonthi',
+                                    headers: {
+                                      "Content-Type": "application/x-www-form-urlencoded"
+                                    }
                                 },
-                                label: `finaltest_{term}_{code}`,
+                                label: `finaltest_${term}_${code}`,
                                 term: term
-                            }
+                            };
                         })
+                        // console.log(this.reqDatas);
                     })
                 });
             }).on('error', (err) => {
@@ -205,7 +228,7 @@ module.exports = {
         }
         else
         {
-            logger.info(`[FINAL_TEST >> DISCOVER] waiting for {ACTIVE_TIME}`);
+            logger.info(`[FINAL_TEST >> DISCOVER] waiting for ${ACTIVE_TIME}`);
         }
         setTimeout(() => this.discover(), DISCOVER_TIMEOUT);
         return this;
@@ -216,8 +239,8 @@ module.exports = {
         if( this.reqDatas.length > 0)
         {
             var config = this.reqDatas.shift();
-            config.label = `finaltest_{config.term}_{config.params.studentcode}`;
-            (new FinalTest()).init(config).crawl();
+            config.label = `finaltest_${config.term}_${config.params.keysearch}`;
+            (new FinalTestCrawler()).init(config).crawl();
         }
         setTimeout(() => this.crawlFinalTest(), FINAL_TEST_TIMEOUT);
         return this;

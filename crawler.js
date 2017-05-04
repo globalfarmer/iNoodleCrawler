@@ -27,7 +27,7 @@ var scoreboard = require('./modules/scoreboard');
 var helpers = global.iNoodle.helpers = {};
 helpers.announceHelper = require('./helpers/announceHelper.js');
 helpers.courseHelper = require('./helpers/courseHelper.js');
-helpers.finalTestSessionHelper = require('./helpers/finalTestSessionHelper.js');
+helpers.finaltestHelper = require('./helpers/finaltestHelper.js');
 helpers.courseHelper = require('./helpers/courseHelper.js');
 helpers.studentHelper = require('./helpers/studentHelper.js')
 helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');

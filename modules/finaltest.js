@@ -1,5 +1,5 @@
 const DISCOVER_TIMEOUT = 1000 * 60 * 60;
-const FINAL_TEST_TIMEOUT = 1000 * 10;
+const FINAL_TEST_TIMEOUT = 1000 * 3;
 
 const ACTIVE_TIME = 3;
 

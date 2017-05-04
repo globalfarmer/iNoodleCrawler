@@ -47,10 +47,9 @@ helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
         // announce.initAndRun();
         // course.initAndRun();
         finaltest.start();
-        // slot.init();
-        // course.start();
+        course.start();
         // finalTestSession.initAndRun();
-        // slot.start();
+        slot.start();
         // student.init();
         // scoreboard.init();
       }

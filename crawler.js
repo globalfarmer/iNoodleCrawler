@@ -18,7 +18,7 @@ transports:
 // modules
 var announce = require('./modules/announce.js');
 var course = require('./modules/course.js');
-var finalTestSession = require('./modules/finalTestSession.js');
+var finaltest = require('./modules/finaltest.js');
 var slot = require('./modules/slot.js');
 var student = require('./modules/student.js');
 var scoreboard = require('./modules/scoreboard');
@@ -27,13 +27,14 @@ var scoreboard = require('./modules/scoreboard');
 var helpers = global.iNoodle.helpers = {};
 helpers.announceHelper = require('./helpers/announceHelper.js');
 helpers.courseHelper = require('./helpers/courseHelper.js');
-helpers.finalTestSessionHelper = require('./helpers/finalTestSessionHelper.js');
+helpers.finaltestHelper = require('./helpers/finaltestHelper.js');
 helpers.courseHelper = require('./helpers/courseHelper.js');
 helpers.studentHelper = require('./helpers/studentHelper.js')
 helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
 
-( () => {
+(() => {
   logger.info('[START] crawler start working');
+  logger.info(`env ${iNoodle.env}`);
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 	MongoClient.connect(
     config.db.host,
@@ -42,11 +43,13 @@ helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
       if(!err)
       {
         logger.info(`[DB] connecting ${config.db.host} successfully`);
-        iNoodle.db = db;
+        global.iNoodle.db = db;
         // announce.initAndRun();
         // course.initAndRun();
+        finaltest.start();
+        course.start();
         // finalTestSession.initAndRun();
-        // slot.init();
+        slot.start();
         // student.init();
         scoreboard.init();
       }
@@ -56,4 +59,4 @@ helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
       }
     }
   );
-}());
+})();

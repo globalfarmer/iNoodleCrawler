@@ -24,7 +24,6 @@
   "homepage": "https://github.com/globalfarmer/iNoodleCrawler#readme",
   "dependencies": {
     "cheerio": "^0.22.0",
-    "cheerio-tableparser": "^1.0.1",
     "mongodb": "^2.2.24",
     "winston": "^2.3.1"
   }

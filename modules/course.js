@@ -1,7 +1,5 @@
-const TIME_OUT = process.env.NODE_ENV == 'production' ?
-                        30 * 60 * 1000 : // 30 mins
-                        10000;
-const ACTIVE_TIME = 10;
+const TIME_OUT = 50 * 60 * 1000;
+const ACTIVE_TIME = 9;
 var https = require('https');
 var http = require('http');
 var cheerio = require('cheerio');
@@ -68,6 +66,8 @@ CourseCrawler.prototype.crawl = function() {
 CourseCrawler.prototype.getTerm = function(strTerm) {
   logger.info(`[COURSE] get term ${strTerm}`);
   var words = strTerm.split(' ');
+  if(words[2] == 'II') words[2] = '2';
+  if(words[2] == 'I') words[2] = '1';
   this.term = [words[5], words[2]].join('-');
   logger.info(`[COURSE] ${this.term}`);
   return this;
@@ -107,9 +107,10 @@ CourseCrawler.prototype.update = function() {
       Object.keys(courseKey).forEach( (k) => {
           course[k] = data[courseKey[k]];
       })
+      course.code = course.code.split(' ').join('').toLowerCase();
       course = Course.refine(course);
       course.term = this.term;
-      bulk.find(course)
+      bulk.find({code: course.code, term: course.term})
       .upsert()
       .update({$set: course, $currentDate: {updatedAt: true}});
   });

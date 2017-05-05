@@ -1,7 +1,7 @@
 // time out for crawling slot table
 const TIME_OUT = 1000 * 10;
 const DISCOVER_TIME_OUT = 1000 * 60 * 30;
-const ACTIVE_TIME = [10, 12, 14];
+const ACTIVE_TIME = [10, 12, 16];
 const PAGE_SIZE = 250;
 var querystring = require('querystring');
 var https = require('https');
@@ -258,7 +258,7 @@ module.exports = {
     init: function() {
       logger.info('[SLOT_MODULE >> INIT]');
       var allowedTime = this.isAllowCrawlling();
-      if( allowedTime != -1)
+      if( allowedTime !== undefined )
       {
         logger.info(`[SLOT_MODULE >> INIT] active at ${allowedTime}`);
         var options = inoodleUtil.deepCopy(iNoodle.config.resource.slot);

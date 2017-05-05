@@ -14,8 +14,8 @@
         "method": "POST"
       },
       "course": {
-        "host": "cdcn14020208.herokuapp.com",
-        "port": "443",
+        "host": "112.137.129.115",
+        "port": "80",
         "method": "GET"
       },
       "slot":
@@ -51,9 +51,10 @@
     {
       "scoreboard":
       {
-        "host": "",
-        "port": "",
-        "method": "POST"
+        "host": "coltech.vnu.edu.vn",
+        "port": "80",
+        "method": "POST",
+        "path": "/news4st/test.php"
       },
       "course":
       {
@@ -78,9 +79,12 @@
       },
       "finalTestSession":
       {
-        "host": "",
-        "port": "",
-        "method": "GET"
+        "host": "112.137.129.87",
+        "port": "443",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
       }
     }
   }

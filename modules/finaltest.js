@@ -1,7 +1,7 @@
-const DISCOVER_TIMEOUT = 1000 * 60 * 60;
+const DISCOVER_TIMEOUT = 1000 * 60 * 30;
 const FINAL_TEST_TIMEOUT = 1000 * 3;
 
-const ACTIVE_TIME = 3;
+const ACTIVE_TIME = 5;
 
 var https = require('https');
 var http = require('http');
@@ -20,6 +20,12 @@ var FinalTestCrawler = function()
   events.EventEmitter.call(this);
 }
 util.inherits(FinalTestCrawler, events.EventEmitter);
+FinalTestCrawler.prototype.getFinalTestTime = function(day, time)
+{
+    var days = day.split('/');
+    var times = time.split(':');
+    return new Date(days[2], parseInt(days[1])-1, days[0], times[0]+7, times[1]);
+}
 FinalTestCrawler.prototype.init = function(config)
 {
     logger.info("[FINAL_TEST_CRAWLER >> INIT");
@@ -91,7 +97,7 @@ FinalTestCrawler.prototype.update = function()
             },
             course:
             {
-                code: ftest[6].split(' ').join(''),
+                code: ftest[6].split(' ').join('').toLowerCase(),
                 name: ftest[7],
                 term: this.config.term
             },
@@ -123,12 +129,7 @@ FinalTestCrawler.prototype.update = function()
         bulk.execute();
     return this;
 }
-FinalTestCrawler.prototype.getFinalTestTime = function(day, time)
-{
-    var days = day.split('/');
-    var times = time.split(':');
-    return new Date(days[2], parseInt(days[1])-1, days[0], times[0], times[1]);
-}
+
 module.exports =
 {
     reqDatas: [],
@@ -185,12 +186,14 @@ module.exports =
                         testUtil.saveIntoFile('finaltest_discovery.html', rawData);
                     }
                     var $ = cheerio.load(rawData);
+                    // begin adhoc work
                     var term;
                     var termWords = $('#content h1').text().trim().split(' ');
                     if( termWords[5] == '1' || termWords[5] == 'I')
                         term = [termWords[8], '1'].join('-');
                     else
                         term = [termWords[8], '2'].join('-');
+                    // end adhoc work
                     iNoodle.db.collection('slot').distinct('student.code', {'course.term': term}).then((codes) =>
                     {
                         console.log('number of students ' + codes.length);

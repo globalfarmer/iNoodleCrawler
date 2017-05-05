@@ -42,6 +42,7 @@ var DiscoverScoreboard = function()
     events.EventEmitter.call(this);
 }
 util.inherits(DiscoverScoreboard, events.EventEmitter);
+// adhoc method
 //antoànvàanninhmạng-int3307(lênmạng:22/01/2016,15:32)
 //@return {course: {}, uploadTime}
 DiscoverScoreboard.prototype.getInfo = function(label) {
@@ -146,6 +147,7 @@ module.exports =
         this.discover().scoreboardCrawling();
         return this;
     },
+    // adhoc method
     getCurrentTerm: function(date) {
         var now = date;
         if( now.getMonth() < 8) {
@@ -172,8 +174,9 @@ module.exports =
                 }
                 var $ = cheerio.load(rawData);
                 var lstClass = $('select[name=lstClass]');
-                var currentTerm = this.getCurrentTerm(new Date(2017,2));
-                // console.log(currentTerm);
+                var currentTerm = this.getCurrentTerm(new Date());
+                logger.info('current term');
+                logger.info(JSON.stringify(currentTerm));
                 $('option', lstClass).each((opt_idx, opt) => {
                     // logger.info(`value option ${$(opt).text().trim()} ${$(opt).attr('value')} ${opt_idx}`);
                     var title = ($(opt).text() || "").toLowerCase().split(" ").join('');
@@ -191,7 +194,7 @@ module.exports =
                                     'Content-Type': 'application/x-www-form-urlencoded',
                                 }
                             },
-                            label: currentTerm[0],
+                            label: `${currentTerm[0]}_scoreboard`,
                             term: currentTerm[1]
                         };
                             (new DiscoverScoreboard()).crawl(config, this.reqDatas);

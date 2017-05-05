@@ -1,12 +1,8 @@
 // time out for crawling slot table
-const TIME_OUT = process.env.NODE_ENV == 'production' ?
-                 2 * 60 * 1000 : // 10 seconds
-                 10 * 1000;
-const DISCOVER_TIME_OUT = process.env.NODE_ENV == 'production' ?
-                          30 * 60 * 1000 : // 10 seconds
-                          10 * 60 * 1000;
-const ACTIVE_TIME = 10;
-const PAGE_SIZE = 5000;
+const TIME_OUT = 1000 * 10;
+const DISCOVER_TIME_OUT = 1000 * 60 * 30;
+const ACTIVE_TIME = [10, 12, 16];
+const PAGE_SIZE = 250;
 var querystring = require('querystring');
 var https = require('https');
 var http = require('http');
@@ -16,12 +12,13 @@ var util = require('util');
 var cheerio = require('cheerio');
 var testUtil = require('./testUtil.js');
 var inoodleUtil = require('../utils/inoodleUtil.js');
-var logger = undefined;
+var logger;
 
 //models
 var Student = require('../models/Student.js');
 var Course = require('../models/Course.js');
 var Slot = require('../models/Slot.js');
+
 
 var SlotCrawler = function() {
   events.EventEmitter.call(this);
@@ -42,9 +39,7 @@ SlotCrawler.prototype.crawl = function()
   logger.info("[SLOTCRAWLER] crawl");
   console.time('slot_crawl');
   console.log(this.config.options);
-  var pro = this.config.options.port == 80 ?
-            http :
-            (this.config.options.port == 443 ? https: undefined);
+  var pro = this.config.options.port == 443 ? https : http;
   var req = pro.request(this.config.options, (response) => {
     response.setEncoding('utf8');
     response.on('data', (chunk) => {
@@ -111,6 +106,7 @@ SlotCrawler.prototype.update = function()
           course[k] = slotData[courseKey[k]];
         })
         course.term = this.config.term;
+        course.code = course.code.split(' ').join('').toLowerCase();
         course = Course.refine(course);
         // console.log(course);
         // slot
@@ -127,7 +123,8 @@ SlotCrawler.prototype.update = function()
         .upsert()
         .update({$set: slot, $currentDate: {updatedAt: true}});
     });
-    bulk.execute();
+    if( bulk.length > 0)
+        bulk.execute();
     // bulk.execute((err, result) => {
       // if( err ) {
         // logger.info(err);
@@ -157,21 +154,21 @@ DiscoverSlot.prototype.getParams = function(obj) {
 DiscoverSlot.prototype.init = function(opts, reqDatas)
 {
   // log
-  logger.info('[DISCOVER_SLOT] init');
+  logger.info('[DISCOVER_SLOT >> INIT');
   console.log(opts);
   // body
   var options = inoodleUtil.deepCopy(opts);
   var rawData = '';
   if( reqDatas.length == 0)
   {
-    var pro = options.port == 80 ? http : (options.port == 443 ? https : undefined);
+    var pro = options.port == 443 ? https : http;
     var req = pro.request(options, (response) => {
       response.setEncoding('utf8');
       response.on('data', (chunk) => {
         rawData += chunk;
       });
       response.on('end', () => {
-        logger.info('[DISCOVER_SLOT] init onEnd');
+        logger.info('[DISCOVER_SLOT >> INIT] onEnd');
         if( iNoodle.env === 'development' ) {
           testUtil.saveIntoFile('qldt.html', rawData)
         }
@@ -206,12 +203,11 @@ DiscoverSlot.prototype.init = function(opts, reqDatas)
   return this;
 }
 DiscoverSlot.prototype.crawl = function(config, reqDatas) {
-    logger.info('[DISCOVER_SLOT] crawl');
+    logger.info('[DISCOVER_SLOT >> CRAWL]');
     console.log(config);
     var config = inoodleUtil.deepCopy(config);
     var rawData = '';
-    var pro = config.options.port == 80 ?
-              http : (config.options.port == 443 ? https : undefined );
+    var pro = config.options.port == 443 ? https : http;
     var req = pro.request(config.options, (response) => {
       response.setEncoding('utf8');
       response.on('data', (chunk) => {
@@ -236,30 +232,23 @@ DiscoverSlot.prototype.crawl = function(config, reqDatas) {
     req.end();
     return this;
 }
-
-// module contain 4 method
-// run: main flow of this module
-// crawl: request and get back raw data(html data)
-// parse: parse raw data into a array of object
-// update: update data on database
 module.exports = {
     reqDatas: [],
     //TODO this method check condition for running automatically
     isAllowCrawlling: function() {
       var date = new Date();
-      return date.getHours() == ACTIVE_TIME;
+      return ACTIVE_TIME.find((hour) => hour == date.getHours());
     },
     start: function() {
       logger = global.iNoodle.logger;
-      logger.info('[SLOT_MODULE] [START]');
+      logger.info('[SLOT_MODULE >> START]');
       this.init();
       this.run();
     },
     run: function() {
-      logger.info('[SLOT_MODULE] [RUN]');
+      logger.info('[SLOT_MODULE >> RUN]');
       if( this.reqDatas.length > 0 ) {
         var config = this.reqDatas.shift();
-        console.log(config);
         config.label = `${config.term}_page_${config.params.SinhvienLmh_page}.html`;
         (new SlotCrawler()).init(config).crawl();
       }
@@ -267,17 +256,18 @@ module.exports = {
       return this;
     },
     init: function() {
-      logger.info('[SLOT_MODULE] [INIT]');
-      if( this.isAllowCrawlling() )
+      logger.info('[SLOT_MODULE >> INIT]');
+      var allowedTime = this.isAllowCrawlling();
+      if( allowedTime !== undefined )
       {
-        logger.info(`[SLOT_MODULE] [INIT] active at ${ACTIVE_TIME}`);
+        logger.info(`[SLOT_MODULE >> INIT] active at ${allowedTime}`);
         var options = inoodleUtil.deepCopy(iNoodle.config.resource.slot);
         options.path = '/congdaotao/module/qldt/';
         (new DiscoverSlot()).init(options, this.reqDatas);
       }
       else
       {
-        logger.info(`[SLOT_MODULE] [INIT] sleeping and waitting for ${ACTIVE_TIME}`);
+        logger.info(`[SLOT_MODULE >> INIT] sleeping and waitting for ${ACTIVE_TIME.toString()}`);
       }
       setTimeout( () => this.init(), DISCOVER_TIME_OUT);
       return this;

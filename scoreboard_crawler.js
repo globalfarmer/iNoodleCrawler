@@ -15,18 +15,13 @@ transports:
 });
 
 // modules
-var announce = require('./modules/announce.js');
-var course = require('./modules/course.js');
-var finaltest = require('./modules/finaltest.js');
-var slot = require('./modules/slot.js');
-var student = require('./modules/student.js');
 var scoreboard = require('./modules/scoreboard');
 
 // helpers
 var helpers = global.iNoodle.helpers = {};
 
 (() => {
-  logger.info('[START] crawler start working');
+  logger.info('[SCOREBOARD_CRAWLER >> START] crawler start working');
   logger.info(`env ${iNoodle.env}`);
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 	MongoClient.connect(
@@ -35,14 +30,8 @@ var helpers = global.iNoodle.helpers = {};
     {
       if(!err)
       {
-        logger.info(`[DB] connecting ${config.db.host} successfully`);
+        logger.info(`[SCOREBOARD_CRAWLER >> DB] connecting ${config.db.host} successfully`);
         global.iNoodle.db = db;
-        // announce.initAndRun();
-        // course.initAndRun();
-        finaltest.start();
-        course.start();
-        slot.start();
-        // student.init();
         scoreboard.start();
       }
       else

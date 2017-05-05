@@ -1,7 +1,6 @@
 //
 global.iNoodle = {};
 global.iNoodle.env = process.env.NODE_ENV || "development";
-global.iNoodle.TIME_OUT = 50000;
 var config = global.iNoodle.config = require('./config.json')[iNoodle.env];
 var winston = require('winston');
 var MongoClient = require('mongodb').MongoClient;
@@ -25,12 +24,6 @@ var scoreboard = require('./modules/scoreboard');
 
 // helpers
 var helpers = global.iNoodle.helpers = {};
-helpers.announceHelper = require('./helpers/announceHelper.js');
-helpers.courseHelper = require('./helpers/courseHelper.js');
-helpers.finaltestHelper = require('./helpers/finaltestHelper.js');
-helpers.courseHelper = require('./helpers/courseHelper.js');
-helpers.studentHelper = require('./helpers/studentHelper.js')
-helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
 
 (() => {
   logger.info('[START] crawler start working');
@@ -46,10 +39,9 @@ helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
         global.iNoodle.db = db;
         // announce.initAndRun();
         // course.initAndRun();
-        // finaltest.start();
-        // course.start();
-        // finalTestSession.initAndRun();
-        // slot.start();
+        finaltest.start();
+        course.start();
+        slot.start();
         // student.init();
         scoreboard.start();
       }

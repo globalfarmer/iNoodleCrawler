@@ -85,7 +85,7 @@ module.exports = {
         }
 
         this.nextCrawler = (this.nextCrawler + 1) % this.reqDatas.length;
-        setTimeout(this.run(), iNoodle.TIME_OUT + 5000);
+        setTimeout(() => this.run(), 5000);
         return this;
     },
     UpLoadTime: function(i){

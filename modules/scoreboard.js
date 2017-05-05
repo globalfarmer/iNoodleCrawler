@@ -1,6 +1,6 @@
-const DISCOVER_TIMEOUT = 1000 * 60 * 5 * 20;
+const DISCOVER_TIMEOUT = 1000 * 60 * 5;
 const SCOREBOARD_CRAWLER_TIMEOUT = 1000 * 5;
-const NUMBER_OF_LATEST = 500;
+const NUMBER_OF_LATEST = 30;
 
 var querystring = require('querystring');
 var http = require('http');

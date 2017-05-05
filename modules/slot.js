@@ -1,7 +1,7 @@
 // time out for crawling slot table
 const TIME_OUT = 1000 * 10;
 const DISCOVER_TIME_OUT = 1000 * 60 * 30;
-const ACTIVE_TIME = [12, 14, 16];
+const ACTIVE_TIME = [10, 12, 14];
 const PAGE_SIZE = 250;
 var querystring = require('querystring');
 var https = require('https');

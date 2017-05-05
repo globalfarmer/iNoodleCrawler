@@ -97,7 +97,7 @@ FinalTestCrawler.prototype.update = function()
             },
             course:
             {
-                code: ftest[6].split(' ').join('').toUpperCase(),
+                code: ftest[6].split(' ').join('').toLowerCase(),
                 name: ftest[7],
                 term: this.config.term
             },

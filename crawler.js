@@ -46,12 +46,12 @@ helpers.scoreboardHelper = require('./helpers/scoreboardHelper.js');
         global.iNoodle.db = db;
         // announce.initAndRun();
         // course.initAndRun();
-        finaltest.start();
-        course.start();
+        // finaltest.start();
+        // course.start();
         // finalTestSession.initAndRun();
-        slot.start();
+        // slot.start();
         // student.init();
-        // scoreboard.init();
+        scoreboard.start();
       }
       else
       {

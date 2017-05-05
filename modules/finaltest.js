@@ -136,11 +136,11 @@ module.exports =
     //TODO this method check condition for running automatically
     isAllowCrawlling: function()
     {
-      var now = new Date();
-      var discovered = (this.lastDiscovery !== undefined && now.getDay() == this.lastDiscovery.getDay());
+        var now = new Date();
+        var discovered = (this.lastDiscovery !== undefined && now.getDay() == this.lastDiscovery.getDay());
     //   console.log(now.getDay());
-    //   if( now.getDay() % 3 == 1 && now.getHours() == ACTIVE_TIME && !discovered )
-        if(this.lastDiscovery === undefined)
+        if( now.getDay() % 2 == 1 && now.getHours() == ACTIVE_TIME && !discovered )
+        // if(this.lastDiscovery === undefined)
         {
             this.lastDiscovery = now;
             return true;

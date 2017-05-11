@@ -70,9 +70,12 @@ DiscoverScoreboard.prototype.crawl = function(_config, reqDatas) {
     this.data = [];
     var config = inoodleUtil.deepCopy(_config);
     var postData = querystring.stringify(config.params);
+    if (iNoodle.env === 'development')
     config.options.headers['Content-Length'] = Buffer.byteLength(postData);
     var pro = http;
     var rawData = "";
+    if (iNoodle.env === 'demo')
+        config.options.path += '?' + postData;
     if( config.options.port == 443 ) pro = https;
     var req = pro.request(config.options, (res) => {
         res.setEncoding('utf8');
@@ -105,7 +108,8 @@ DiscoverScoreboard.prototype.crawl = function(_config, reqDatas) {
             }
         });
     });
-    req.write(postData);
+    if (iNoodle.env !== 'demo')
+        req.write(postData);
     req.end();
 }
 DiscoverScoreboard.prototype.parse = function(reqDatas) {
@@ -163,7 +167,7 @@ module.exports =
     discover: function() {
         logger.info('[SCOREBOARD >> DISCOVER]');
         var rawData = "";
-        http.get('http://www.coltech.vnu.edu.vn/news4st/kqdh.php', (res) => {
+        http.get("http://" + iNoodle.config.resource.scoreboard.host + iNoodle.config.resource.scoreboard.path, (res) => {
             res.setEncoding('utf8');
             res.on('data', (chunk) => {
                 rawData += chunk;
@@ -174,7 +178,7 @@ module.exports =
                 }
                 var $ = cheerio.load(rawData);
                 var lstClass = $('select[name=lstClass]');
-                var currentTerm = this.getCurrentTerm(new Date());
+                var currentTerm = this.getCurrentTerm(new Date('October 13, 2016'));
                 logger.info('current term');
                 logger.info(JSON.stringify(currentTerm));
                 $('option', lstClass).each((opt_idx, opt) => {
@@ -185,20 +189,13 @@ module.exports =
                         var config =
                         {
                             params: {lstClass: $(opt).attr('value').trim() },
-                            options: {
-                                "host": "coltech.vnu.edu.vn",
-                                "port": "80",
-                                "method": "POST",
-                                "path": "/news4st/test.php",
-                                headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded',
-                                }
-                            },
+                            options: iNoodle.config.resource.scoreboard,
                             label: `${currentTerm[0]}_scoreboard`,
                             term: currentTerm[1]
                         };
-                            (new DiscoverScoreboard()).crawl(config, this.reqDatas);
-                        }
+                        (new DiscoverScoreboard()).crawl(config, this.reqDatas);
+                    }
+
                 });
             });
         });

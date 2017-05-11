@@ -54,7 +54,10 @@
         "host": "coltech.vnu.edu.vn",
         "port": "80",
         "method": "POST",
-        "path": "/news4st/test.php"
+        "path": "/news4st/test.php",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
       },
       "course":
       {
@@ -82,9 +85,55 @@
         "host": "112.137.129.87",
         "port": "443",
         "method": "POST",
+        "path": "/congdaotao/module/dsthi_new/index.php?r=lopmonhoc/napmonthi",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
         }
+      }
+    }
+  },
+  "demo":
+  {
+    "db":
+    {
+      "host": "mongodb://127.0.0.1:27017/inoodle2017"
+    },
+    "resource":
+    {
+      "scoreboard":
+      {
+        "host": "54.202.166.223",
+        "port": "80",
+        "method": "GET",
+        "path": "/diemthi/index.php/scoreboard"
+      },
+      "course":
+      {
+        "host": "cdcn14020208.herokuapp.com",
+        "port": "443",
+        "method": "GET"
+      },
+      "slot":
+      {
+        "host": "112.137.129.87",
+        "port": "443",
+        "method": "GET"
+      },
+      "student":
+      {
+      },
+      "announce":
+      {
+        "host": "uet.vnu.edu.vn",
+        "port": "443",
+        "method": "GET"
+      },
+      "finalTestSession":
+      {
+        "host": "final-term.herokuapp.com",
+        "port": "80",
+        "method": "GET",
+        "path": "/search"
       }
     }
   }

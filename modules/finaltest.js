@@ -140,7 +140,7 @@ module.exports =
     isAllowCrawlling: function()
     {
         var now = new Date();
-        var discovered = (this.lastDiscovery !== undefined || now - this.lastDiscovery < PERIOD_TIME);
+        var discovered = (this.lastDiscovery !== undefined && now - this.lastDiscovery < PERIOD_TIME);
     //   console.log(now.getDay());
         if( !discovered )
         // if(this.lastDiscovery === undefined)

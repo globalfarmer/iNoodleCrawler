@@ -1,5 +1,7 @@
 const TIME_OUT = 50 * 60 * 1000;
 const ACTIVE_TIME = 9;
+const PERIOD_TIME = 1000 * 60 * 60 * 5;
+
 var https = require('https');
 var http = require('http');
 var cheerio = require('cheerio');
@@ -110,7 +112,7 @@ CourseCrawler.prototype.update = function() {
       course.code = course.code.split(' ').join('').toLowerCase();
       course = Course.refine(course);
       course.term = this.term;
-      bulk.find({code: course.code, term: course.term})
+      bulk.find(course)
       .upsert()
       .update({$set: course, $currentDate: {updatedAt: true}});
   });
@@ -136,10 +138,16 @@ CourseCrawler.prototype.update = function() {
 module.exports = {
     currentIndex: 0,
     reqDatas: [],
+    lastDiscovery: undefined,
     //TODO this method check condition for running automatically
     isAllowCrawlling: function() {
-      var date = new Date();
-      return date.getHours() == ACTIVE_TIME;
+      var now = new Date();
+      var discovered = (this.lastDiscovery !== undefined && now - this.lastDiscovery < PERIOD_TIME)
+      if( !discovered ) {
+          this.lastDiscovery = now;
+          return true;
+      }
+      return false;
     },
     start: function() {
       logger.info('[COURSE] start');

@@ -3,6 +3,8 @@ const FINAL_TEST_TIMEOUT = 1000 * 3;
 
 const ACTIVE_TIME = 5;
 
+const PERIOD_TIME = 1000 * 60 * 60 * 7;
+
 var https = require('https');
 var http = require('http');
 var fs = require('fs');
@@ -138,9 +140,9 @@ module.exports =
     isAllowCrawlling: function()
     {
         var now = new Date();
-        var discovered = (this.lastDiscovery !== undefined && now.getDay() == this.lastDiscovery.getDay());
+        var discovered = (this.lastDiscovery !== undefined || now - this.lastDiscovery < PERIOD_TIME);
     //   console.log(now.getDay());
-        if( now.getDay() % 2 == 1 && now.getHours() == ACTIVE_TIME && !discovered )
+        if( !discovered )
         // if(this.lastDiscovery === undefined)
         {
             this.lastDiscovery = now;
@@ -193,6 +195,7 @@ module.exports =
                         term = [termWords[8], '1'].join('-');
                     else
                         term = [termWords[8], '2'].join('-');
+                    logger.info(`Current Term >>>>>>>>>>>>>>>>>> ${term}`);
                     // end adhoc work
                     iNoodle.db.collection('slot').distinct('student.code', {'course.term': term}).then((codes) =>
                     {

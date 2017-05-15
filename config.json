@@ -1,44 +1,14 @@
 {
   "production":
   {
-    "db":
-    {
-      "host": "mongodb://127.0.0.1:27017/inoodle2017"
-    },
-    "resource":
-    {
-      "scoreboard":
-      {
-        "host": "",
-        "port": "",
-        "method": "POST"
-      },
-      "course": {
-        "host": "112.137.129.115",
-        "port": "80",
-        "method": "GET"
-      },
-      "slot":
-      {
-        "host": "112.137.129.87",
-        "port": "443",
-        "method": "GET"
-      },
-      "student":
-      {
-      },
-      "announce":
-      {
-        "host": "uet.vnu.edu.vn",
-        "port": "80",
-        "method": "GET"
-      },
-      "finalTestSession":
-      {
-        "host": "",
-        "port": "",
-        "method": "GET"
-      }
+    "db": { "host": "mongodb://127.0.0.1:27017/inoodle2017" },
+    "resource": {
+      "scoreboard": {},
+      "course": {},
+      "slot": {},
+      "student": {},
+      "announce": {},
+      "finaltest": {}
     }
   },
   "development":
@@ -46,6 +16,19 @@
     "db":
     {
       "host": "mongodb://127.0.0.1:27017/inoodle2017"
+    },
+    "discover" : {
+        "announce": {},
+        "course": {},
+        "finaltest": {
+            "host": "112.137.129.87",
+            "port": "443",
+            "path": "/congdaotao/module/dsthi_new/",
+            "method": "GET"
+        },
+        "slot": {},
+        "student": {},
+        "scoreboard": {}
     },
     "resource":
     {
@@ -80,7 +63,7 @@
         "port": "443",
         "method": "GET"
       },
-      "finalTestSession":
+      "finaltest":
       {
         "host": "112.137.129.87",
         "port": "443",
@@ -96,7 +79,20 @@
   {
     "db":
     {
-      "host": "mongodb://127.0.0.1:27017/inoodle2017"
+      "host": "mongodb://127.0.0.1:27017/inoodle2017demo"
+    },
+    "discover": {
+        "announce": {},
+        "course": {},
+        "finaltest": {
+            "host": "final-term.herokuapp.com",
+            "port": "80",
+            "method": "GET",
+            "path": "/search"
+        },
+        "slot": {},
+        "student": {},
+        "scoreboard": {}
     },
     "resource":
     {
@@ -128,7 +124,7 @@
         "port": "443",
         "method": "GET"
       },
-      "finalTestSession":
+      "finaltest":
       {
         "host": "final-term.herokuapp.com",
         "port": "80",

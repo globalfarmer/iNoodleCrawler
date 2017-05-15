@@ -41,8 +41,7 @@ FinalTestCrawler.prototype.crawl = function()
     var dataPost = querystring.stringify(this.config.params);
     var pro = http;
     if( this.config.options.port == 443 ) pro = https;
-    if (iNoodle.env === 'demo')
-        this.config.options.path += '?' + dataPost;
+    if (this.config.options.method.toUpperCase() == 'GET') this.config.options.path += '?' + dataPost;
     var req = pro.request(this.config.options, (response) => {
       response.setEncoding('utf8');
       response.on('data', (chunk) => {
@@ -56,8 +55,7 @@ FinalTestCrawler.prototype.crawl = function()
         this.parse().update();
       });
     });
-    if (iNoodle.env !== 'demo')
-        req.write(dataPost);
+    if (this.config.option.method.toUpperCase() == "POST") req.write(dataPost);
     req.end();
     return this;
 }
@@ -164,19 +162,9 @@ module.exports =
         if( this.isAllowCrawlling() )
         {
             logger.info('[FINAL_TEST >> DISCOVER]');
-            var config = {};
-            if (iNoodle.env === 'demo')
-                config = {
-                    options: iNoodle.config.resource.finalTestSession
-                };
-            else config = {
-                    option: {
-                        host: '112.137.129.87',
-                        port: 443,
-                        path: '/congdaotao/module/dsthi_new/',
-                        method: 'GET'
-                    }
-                }
+            var config = {
+                option: iNoodle.config.discover.finaltest
+            };
             var pro = http;
             var rawData = "";
             if( config.options.port == 443) pro = https;
@@ -212,7 +200,7 @@ module.exports =
                                 {
                                     keysearch: code
                                 },
-                                options: iNoodle.config.resource.finalTestSession,
+                                options: iNoodle.config.resource.finaltest,
                                 label: `finaltest_${term}_${code}`,
                                 term: term
                             };

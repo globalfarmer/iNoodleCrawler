@@ -30,7 +30,7 @@ ScoreboardCrawler.prototype.download = function(scoreboard) {
         if( res.statusCode == 200) {
             scoreboard.file.available = true;
             iNoodle.db.collection('scoreboard')
-            .update({'course.code': scoreboard.course.code, 'term': scoreboard.term}, {$set: scoreboard, $currentDate: {updatedAt:true}});
+            .update({'course.code': scoreboard.course.code, 'term': scoreboard.term, 'label': scoreboard.label}, {$set: scoreboard, $currentDate: {updatedAt:true}});
         }
       });
     }).on('error', (err) => {
@@ -46,24 +46,30 @@ util.inherits(DiscoverScoreboard, events.EventEmitter);
 //antoànvàanninhmạng-int3307(lênmạng:22/01/2016,15:32)
 //@return {course: {}, uploadTime}
 DiscoverScoreboard.prototype.getInfo = function(label) {
+    var ret = { label: label }
+    var name = '';
     while(true) {
-        var idx = label.indexOf('-');
-        if( idx != -1)
+        var idx = Math.max(label.indexOf('-'), label.indexOf('_'));
+        if( idx != -1) {
+            name = [name, label.slice(0, idx+1)].join('');
             label = label.slice(idx+1);
+        }
         else
             break;
     }
+    label = label.split(' ').join('').toLowerCase();
     var code = label.slice(0, label.indexOf('('));
     var labels = label.slice(label.indexOf(':')+1,-1).split(',');
     var days = labels[0].split('/');
     var times = labels[1].split(':');
-    var ret = {
+    var uploadTime = new Date(days[2], days[1]-1, days[0], times[0]-7, times[1]);
+    return Object.assign( ret, {
         course: {
-            code: code
+            code: code,
+            name: name.slice(0, -1).trim(),
         },
-        uploadTime: new Date(days[2], days[1], days[0], times[0], times[1])
-    }
-    return ret;
+        uploadTime: uploadTime,
+    })
 }
 DiscoverScoreboard.prototype.crawl = function(_config, reqDatas) {
     logger.info('[SCOREBOARD >> DISCOVER_SCOREBOARD >> CRAWL]');
@@ -88,12 +94,13 @@ DiscoverScoreboard.prototype.crawl = function(_config, reqDatas) {
             if(tables.length === 2) {
                 var rows = $('a', tables[1]);
                 rows.each((row_idx, row) => {
-                    var info = this.getInfo($(row).text().toLowerCase().split(' ').join(''));
+                    var info = this.getInfo($(row).text());
                     this.data.push({
                         href: ['http://coltech.vnu.edu.vn/news4st', $(row).attr('href')].join('/'),
                         course: info.course,
                         term: config.term,
-                        uploadTime: info.uploadTime
+                        uploadTime: info.uploadTime,
+                        label: info.label
                     });
                 });
                 this.parse(reqDatas);
@@ -114,7 +121,7 @@ DiscoverScoreboard.prototype.parse = function(reqDatas) {
     this.data = this.data.slice(0, NUMBER_OF_LATEST);
     // console.log(this.data);
     this.data.forEach((sb) => {
-        iNoodle.db.collection('scoreboard').find({'course.code': sb.course.code, 'term': sb.term}).limit(1).toArray((err, results) =>
+        iNoodle.db.collection('scoreboard').find({'course.code': sb.course.code, 'term': sb.term, 'label': sb.label}).limit(1).toArray((err, results) =>
         {
             if( err)
                 logger.error(err);
@@ -174,7 +181,7 @@ module.exports =
                 }
                 var $ = cheerio.load(rawData);
                 var lstClass = $('select[name=lstClass]');
-                var currentTerm = this.getCurrentTerm(new Date());
+                var currentTerm = this.getCurrentTerm(new Date(2016, 3, 1));
                 logger.info('current term');
                 logger.info(JSON.stringify(currentTerm));
                 $('option', lstClass).each((opt_idx, opt) => {

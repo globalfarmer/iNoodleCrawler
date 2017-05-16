@@ -26,7 +26,7 @@ FinalTestCrawler.prototype.getFinalTestTime = function(day, time)
 {
     var days = day.split('/');
     var times = time.split(':');
-    return new Date(days[2], parseInt(days[1])-1, days[0], times[0]+7, times[1]);
+    return new Date(days[2], parseInt(days[1])-1, days[0], parseInt(times[0])-7, times[1]);
 }
 FinalTestCrawler.prototype.init = function(config)
 {

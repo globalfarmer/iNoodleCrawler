@@ -181,7 +181,7 @@ module.exports =
                 }
                 var $ = cheerio.load(rawData);
                 var lstClass = $('select[name=lstClass]');
-                var currentTerm = this.getCurrentTerm(new Date(2016, 3, 1));
+                var currentTerm = this.getCurrentTerm(new Date());
                 logger.info('current term');
                 logger.info(JSON.stringify(currentTerm));
                 $('option', lstClass).each((opt_idx, opt) => {

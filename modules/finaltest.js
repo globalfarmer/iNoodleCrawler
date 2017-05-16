@@ -105,6 +105,7 @@ FinalTestCrawler.prototype.update = function()
             },
             seat: ftest[5],
             time: this.getFinalTestTime(ftest[8], ftest[9]),
+            rawTime: [ftest[8], ftest[9]].join(','),
             sessionNo: ftest[10],
             term: this.config.term,
             room: ftest[11],

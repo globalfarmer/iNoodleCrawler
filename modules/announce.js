@@ -1,4 +1,5 @@
 var https = require('https');
+var http = require('http');
 var logger = global.iNoodle.logger;
 var db = undefined;
 var cheerio = require('cheerio');
@@ -37,7 +38,8 @@ module.exports = {
         logger.info("[ANNOUNCE] crawl");
         console.log(this.options);
         this.rawData = '';
-        var req = https.request(this.options, (response) => {
+        var pro = this.options.port == 443 ? https : http;
+        var req = pro.request(this.options, (response) => {
             response.setEncoding('utf8');
             response.on('data', (chunk) => {
                 logger.info("[ANNOUNCE] crawl_onData_" + this.nextCrawler);
@@ -47,7 +49,7 @@ module.exports = {
                 logger.info("[ANNOUNCE] crawl_onEnd_" + this.nextCrawler);
                 this.parse().UpLoadTime(0);
                 if (iNoodle.env === 'development') {
-                    //testUtil.saveIntoFile(`announce_${this.nextCrawler}.html`, this.rawData);
+                    testUtil.saveIntoFile(`announce_${this.nextCrawler}.html`, this.rawData);
                 }
             });
         });
@@ -93,7 +95,8 @@ module.exports = {
         option.path = this.data[i].link.substring(iNoodle.config.resource.announce.host.length, this.data[i].link.length);
         // logger.info(i, path);
         var data;
-        var req = https.request(this.options, (response) => {
+        var pro = this.options.port == 443 ? https : http;
+        var req = pro.request(this.options, (response) => {
             response.setEncoding('utf8');
             response.on('data', (chunk) => {
                 data += chunk;

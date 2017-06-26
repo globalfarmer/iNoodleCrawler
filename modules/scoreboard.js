@@ -96,7 +96,7 @@ DiscoverScoreboard.prototype.crawl = function(_config, reqDatas) {
                 rows.each((row_idx, row) => {
                     var info = this.getInfo($(row).text());
                     this.data.push({
-                        href: ['http://coltech.vnu.edu.vn/news4st', $(row).attr('href')].join('/'),
+                        href: ['http://uet.vnu.edu.vn/news4st', $(row).attr('href')].join('/'),
                         course: info.course,
                         term: config.term,
                         uploadTime: info.uploadTime,
@@ -121,7 +121,7 @@ DiscoverScoreboard.prototype.parse = function(reqDatas) {
     this.data = this.data.slice(0, NUMBER_OF_LATEST);
     // console.log(this.data);
     this.data.forEach((sb) => {
-        iNoodle.db.collection('scoreboard').find({'course.code': sb.course.code, 'term': sb.term, 'label': sb.label}).limit(1).toArray((err, results) =>
+        iNoodle.db.collection('scoreboard').find({'course.code': sb.course.code, 'term': sb.term, 'href': sb.href}).limit(1).toArray((err, results) =>
         {
             if( err)
                 logger.error(err);
@@ -170,7 +170,7 @@ module.exports =
     discover: function() {
         logger.info('[SCOREBOARD >> DISCOVER]');
         var rawData = "";
-        http.get('http://www.coltech.vnu.edu.vn/news4st/kqdh.php', (res) => {
+        http.get('http://www.uet.vnu.edu.vn/news4st/kqdh.php', (res) => {
             res.setEncoding('utf8');
             res.on('data', (chunk) => {
                 rawData += chunk;
@@ -193,7 +193,7 @@ module.exports =
                         {
                             params: {lstClass: $(opt).attr('value').trim() },
                             options: {
-                                "host": "coltech.vnu.edu.vn",
+                                "host": "uet.vnu.edu.vn",
                                 "port": "80",
                                 "method": "POST",
                                 "path": "/news4st/test.php",

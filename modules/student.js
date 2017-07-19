@@ -4,7 +4,7 @@ var cheerio = require('cheerio');
 var querystring = require('querystring');
 var PERIOD = {
     DISCOVER_TIME: 2 * 60 * 60 * 1000,
-    CRAWL_TIME: 30 * 60 * 1000
+    CRAWL_TIME: 20 * 60 * 1000
 }
 const FIELDS = {
     config: "config"

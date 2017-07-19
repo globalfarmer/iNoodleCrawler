@@ -32,6 +32,16 @@ var helpers = global.iNoodle.helpers = {};
       {
         logger.info(`[STUDENT_CRAWLER >> DB] connecting ${config.db.host} successfully`);
         global.iNoodle.db = db;
+        db.collection('student_pack').createIndex(
+            {
+                version: 1
+            },
+            {
+                background: true,
+                sparse: true,
+                expireAfterSeconds: 2 * 60
+            }
+        );
         student.main();
       }
       else

@@ -28,15 +28,15 @@ module.exports = {
     },
     crawl: function(crawler) {
         var config = crawler.config;
-        console.log(config);
         var logger = iNoodle.logger;
         var production = (iNoodle.env == 'production');
+        var timeLabel = 'crawl_' + (new Date()).getTime();
+        console.time(timeLabel);
         return new Promise((resolve, reject) => {
             var htmlContent = "";
             if( !production ) {
-                var timeLabel = 'crawl_' + (new Date()).getTime();
+                console.log(config);
                 logger.info("[CRAWL] " + JSON.stringify(config.options));
-                console.time(timeLabel);
             }
             var pro = config.options.port == 443 ? https : http;
             var req = pro.request(config.options, (res) => {
@@ -48,8 +48,8 @@ module.exports = {
                     if(!production) {
                         fsUtil.saveIntoFile(`${config.label}.html`, htmlContent);
                         logger.info("[CRAWL] onEnd");
-                        console.timeEnd(timeLabel);
                     }
+                    console.timeEnd(timeLabel);
                     crawler.htmlContent = htmlContent;
                     resolve(crawler);
                 });

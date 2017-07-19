@@ -17,20 +17,21 @@ var StudentCrawler = function(params = {}) {
 StudentCrawler.prototype.main = function() {
     inoodleUtil
     .crawl(this)
-    .then(this.parse).catch((e) => iNoodle.logger.error(e))
-    .then(this.saveToDB).catch((e) => iNoodle.logger.error(e));
+    .then((crawler) => crawler.parse()).catch((e) => iNoodle.logger.error(e))
+    .then((crawler) => crawler.saveToDB()).catch((e) => iNoodle.logger.error(e));
 }
-StudentCrawler.prototype.parse = function(crawler) {
-    var logger = iNoodle.env == 'production' ? undefined : iNoodle.logger;
-    if( logger ) {
-        var parseLabel = "parse_" + (new Date()).getTime();
+StudentCrawler.prototype.parse = function() {
+    var logger = iNoodle.logger;
+    var production = (iNoodle.env == 'production');
+    var parseLabel = "parse_" + (new Date()).getTime();
+    console.time(parseLabel);
+    if( !production ) {
         logger.info('[STUDENT_CRAWLER] parse');
-        console.time(parseLabel);
     }
-    crawler.students = {};
-    $ = cheerio.load(crawler.htmlContent);
+    this.students = {};
+    $ = cheerio.load(this.htmlContent);
     var tables = $('table.items');
-    var term = crawler.config.term;
+    var term = this.config.term;
     // console.log(tables);
     if( tables.length === 1) {
         $('tr',tables).each( (row_idx, row) => {
@@ -38,47 +39,55 @@ StudentCrawler.prototype.parse = function(crawler) {
             $('td', row).each( (col_idx, col) => {
                 slot.push($(col).text().trim() || "");
             });
-            if( row_idx > 1 && !crawler.students.hasOwnProperty(slot[1])) {
+            if( row_idx > 1 && !this.students.hasOwnProperty(slot[1])) {
                 // var studentKey = {"code": 1, "fullname": 2, "birthday": 3, "klass": 4};
                 [day, month, year] = slot[3].split("/");
-                crawler.students[slot[1]] = {
+                this.students[slot[1]] = {
                     'code': slot[1],
                     'fullname': slot[2],
-                    'birthday': new Date(year, parseInt(month)-1, day),
+                    'birthday': new Date(year, parseInt(month)-1, day, -7), // UTC time
                     'klass': slot[4],
                     'term': term,
                 }
             }
         });
-        if( logger )
-            logger.info(`number of students ${Object.keys(crawler.students).length}`);
+        if( !production )
+            logger.info(`number of students ${Object.keys(this.students).length}`);
     }
     else
     {
-        if( logger )
+        if( !production )
             logger.info("[STUDENT_CRAWLER] parse: have no table.items or more than one");
     }
     console.timeEnd(parseLabel);
-    return crawler;
+    return this;
 }
-StudentCrawler.prototype.saveToDB = function(crawler) {
-    console.log(crawler.students);
+StudentCrawler.prototype.saveToDB = function() {
+    var production = ( iNoodle.env == 'production');
     var logger = iNoodle.logger;
+    var saveLabel = 'save_' + (new Date()).getTime();
+    console.time(saveLabel);
+    if( !production ) {
+        console.log(this.students['13020752']);
+    }
     var studentCollection = iNoodle.db.collection('student');
-    studentCollection.find({term: crawler.config.term}).toArray((err, items) => {
+    studentCollection.find({term: this.config.term}).toArray((err, items) => {
+        if( !production)
+            console.info(`10 items in list items of ${items.length}`)
+            console.log(items.slice(0,10));
         if( err )
         {
             logger.error(err);
         }
         else {
             for(student of items) {
-                if( crawler.students.hasOwnProperty(student.code)) {
-                    delete crawler.students[student.code];
+                if( this.students.hasOwnProperty(student.code)) {
+                    delete this.students[student.code];
                 }
             }
             var bulk = studentCollection.initializeUnorderedBulkOp();
-            for(code in crawler.students) {
-                bulk.insert(crawler.students[code]);
+            for(code in this.students) {
+                bulk.insert(this.students[code]);
             }
             if( bulk.length > 0 ) {
                 bulk.execute((err, result) => {
@@ -86,16 +95,25 @@ StudentCrawler.prototype.saveToDB = function(crawler) {
                         logger.error(err);
                     }
                     else {
-                        console.log(crawler.packID);
+                        if( !production ) {
+                            logger.info(this.packID);
+                        }
+                        console.timeEnd(saveLabel);
                         iNoodle.db.collection('student_pack').remove({
-                            _id: crawler.packID
+                            _id: this.packID
                         });
                     }
                 });
             }
+            else {
+                iNoodle.db.collection('student_pack').remove({
+                    _id: this.packID
+                });
+                console.timeEnd(saveLabel);
+            }
         }
     })
-    return crawler;
+    return this;
 }
 
 module.exports = {

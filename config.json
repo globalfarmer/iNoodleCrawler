@@ -26,6 +26,25 @@
       },
       "student":
       {
+          "discover":
+          {
+              "host": "112.137.129.87",
+              "port": "443",
+              "method": "GET",
+              "path": "/congdaotao/module/qldt/"
+          },
+          "options":
+          {
+              "host": "112.137.129.87",
+              "port": "443",
+              "method": "GET",
+              "path": "/congdaotao/module/qldt/index.php?r=sinhvienLmh/admin&"
+          },
+          "params":
+          {
+              "SinhvienLmh_page": 1,
+              "pageSize": 10
+          }
       },
       "announce":
       {

@@ -41,51 +41,70 @@
       }
     }
   },
-  "development":
-  {
-    "db":
+    "development":
     {
-      "host": "mongodb://127.0.0.1:27017/inoodle2017"
-    },
-    "resource":
-    {
-      "scoreboard":
-      {
-        "host": "coltech.vnu.edu.vn",
-        "port": "80",
-        "method": "POST",
-        "path": "/news4st/test.php"
-      },
-      "course":
-      {
-        "host": "cdcn14020208.herokuapp.com",
-        "port": "443",
-        "method": "GET"
-      },
-      "slot":
-      {
-        "host": "112.137.129.87",
-        "port": "443",
-        "method": "GET"
-      },
-      "student":
-      {
-      },
-      "announce":
-      {
-        "host": "uet.vnu.edu.vn",
-        "port": "80",
-        "method": "GET"
-      },
-      "finalTestSession":
-      {
-        "host": "112.137.129.87",
-        "port": "443",
-        "method": "POST",
-        "headers": {
-          "Content-Type": "application/x-www-form-urlencoded"
+        "db":
+        {
+            "host": "mongodb://127.0.0.1:27017/inoodle2017"
+        },
+        "resource":
+        {
+            "scoreboard":
+            {
+                "host": "coltech.vnu.edu.vn",
+                "port": "80",
+                "method": "POST",
+                "path": "/news4st/test.php"
+            },
+            "course":
+            {
+            "host": "cdcn14020208.herokuapp.com",
+            "port": "443",
+            "method": "GET"
+            },
+            "slot":
+            {
+                "host": "112.137.129.87",
+                "port": "443",
+                "method": "GET"
+            },
+            "student":
+            {
+                "discover":
+                {
+                    "host": "112.137.129.87",
+                    "port": "443",
+                    "method": "GET",
+                    "path": "/congdaotao/module/qldt/"
+                },
+                "options":
+                {
+                    "host": "112.137.129.87",
+                    "port": "443",
+                    "method": "GET",
+                    "path": "/congdaotao/module/qldt/index.php?r=sinhvienLmh/admin&"
+                },
+                "params":
+                {
+                    "SinhvienLmh_page": 1,
+                    "pageSize": 30000
+                }
+            },
+            "announce":
+            {
+            "host": "uet.vnu.edu.vn",
+            "port": "80",
+            "method": "GET"
+            },
+            "finalTestSession":
+            {
+            "host": "112.137.129.87",
+            "port": "443",
+            "method": "POST",
+            "headers": {
+              "Content-Type": "application/x-www-form-urlencoded"
+            }
+            }
         }
-      }
     }
-  }
 }

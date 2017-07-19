@@ -187,9 +187,9 @@ DiscoverSlot.prototype.init = function(opts, reqDatas)
             };
             config.prePath = '/congdaotao/module/qldt/index.php?r=sinhvienLmh/admin&';
             config.options = {
-              host: options.host,
-              method: "GET",
-              port: options.port,
+                host: options.host,
+                method: "GET",
+                port: options.port,
             };
             config.options.path = config.prePath + querystring.stringify(config.params);
             config.term = this.getTerm($(opt).text().trim());

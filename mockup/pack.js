@@ -1,8 +1,9 @@
 {
     "_id": "",
     "type": "slot/finaltest/session",
-    "option": {
-
+    "config": {
+        "options": {},
+        "params": {}
     },
     "status": "pending/done",
     "version": "",

@@ -126,7 +126,7 @@ module.exports = {
         this.discover();
         setInterval(() => this.discover, PERIOD.DISCOVER_TIME);
         var crawler = function() {
-            iNoodle.db.collection('student_pack').find({status: 'pending'}).toArray((err, packs) => {
+            iNoodle.db.collection('student_pack').find().toArray((err, packs) => {
                 if( err ) {
                     logger.error(err);
                 }
@@ -182,8 +182,7 @@ module.exports = {
                                     options: options,
                                     params: params,
                                     term: term
-                                },
-                                status: 'pending'
+                                }
                             }
                         }
                     }

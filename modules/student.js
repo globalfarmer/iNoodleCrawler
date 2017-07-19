@@ -87,6 +87,13 @@ StudentCrawler.prototype.saveToDB = function() {
             }
             var bulk = studentCollection.initializeUnorderedBulkOp();
             for(code in this.students) {
+                this.students[code].version =
+                {
+                    "slot": new Date(),
+                    "finaltest": new Date(),
+                    "session": new Date()
+                }
+                this.students[code].slots = {};
                 bulk.insert(this.students[code]);
             }
             if( bulk.length > 0 ) {
@@ -174,7 +181,6 @@ module.exports = {
                         var term = this.getTerm($(opt).text().trim());
                         var options = inoodleUtil.deepCopy(config.options);
                         params['SinhvienLmh[term_id]'] = $(opt).attr('value').trim();
-                        // TODO complete options.path with params
                         options.path = config.options.path + querystring.stringify(params);
                         if( studentPack == undefined || term.split('-').slice(-1)[0] === '2' ) {
                             studentPack = {

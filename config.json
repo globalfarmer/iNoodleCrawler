@@ -1,65 +1,66 @@
 {
-  "production":
-  {
-    "db":
+    "production":
     {
-      "host": "mongodb://127.0.0.1:27017/inoodle2017"
+        "db":
+        {
+            "host": "mongodb://127.0.0.1:27017/inoodle2017"
+        },
+        "resource":
+        {
+            "scoreboard":
+            {
+                "host": "",
+                "port": "",
+                "method": "POST"
+            },
+            "course":
+            {
+                "host": "112.137.129.115",
+                "port": "80",
+                "method": "GET"
+            },
+            "slot":
+            {
+                "host": "112.137.129.87",
+                "port": "443",
+                "method": "GET"
+            },
+            "student":
+            {
+                "discover":
+                {
+                    "host": "112.137.129.87",
+                    "port": "443",
+                    "method": "GET",
+                    "path": "/congdaotao/module/qldt/"
+                },
+                "options":
+                {
+                    "host": "112.137.129.87",
+                    "port": "443",
+                    "method": "GET",
+                    "path": "/congdaotao/module/qldt/index.php?r=sinhvienLmh/admin&"
+                },
+                "params":
+                {
+                    "SinhvienLmh_page": 1,
+                    "pageSize": 30000
+                }
+            },
+            "announce":
+            {
+                "host": "uet.vnu.edu.vn",
+                "port": "80",
+                "method": "GET"
+            },
+            "finalTestSession":
+            {
+                "host": "",
+                "port": "",
+                "method": "GET"
+            }
+        }
     },
-    "resource":
-    {
-      "scoreboard":
-      {
-        "host": "",
-        "port": "",
-        "method": "POST"
-      },
-      "course": {
-        "host": "112.137.129.115",
-        "port": "80",
-        "method": "GET"
-      },
-      "slot":
-      {
-        "host": "112.137.129.87",
-        "port": "443",
-        "method": "GET"
-      },
-      "student":
-      {
-          "discover":
-          {
-              "host": "112.137.129.87",
-              "port": "443",
-              "method": "GET",
-              "path": "/congdaotao/module/qldt/"
-          },
-          "options":
-          {
-              "host": "112.137.129.87",
-              "port": "443",
-              "method": "GET",
-              "path": "/congdaotao/module/qldt/index.php?r=sinhvienLmh/admin&"
-          },
-          "params":
-          {
-              "SinhvienLmh_page": 1,
-              "pageSize": 10
-          }
-      },
-      "announce":
-      {
-        "host": "uet.vnu.edu.vn",
-        "port": "80",
-        "method": "GET"
-      },
-      "finalTestSession":
-      {
-        "host": "",
-        "port": "",
-        "method": "GET"
-      }
-    }
-  },
     "development":
     {
         "db":

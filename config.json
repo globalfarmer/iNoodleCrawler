@@ -29,9 +29,13 @@
       },
       "announce":
       {
-        "host": "uet.vnu.edu.vn",
-        "port": "80",
-        "method": "GET"
+        "options":
+        {
+            "host": "uet.vnu.edu.vn",
+            "port": "80",
+            "method": "GET",
+            "path": "/coltech/taxonomy/term/53"
+        }
       },
       "finalTestSession":
       {

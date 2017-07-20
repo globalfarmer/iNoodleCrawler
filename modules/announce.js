@@ -3,7 +3,7 @@ var fsUtil = require('./testUtil.js');
 var inoodleUtil = require('../utils/inoodleUtil.js');
 var PERIOD =
 {
-    CRAWL_TIME: 15 * 60 * 1000
+    CRAWL_TIME: 5 * 60 * 1000
 }
 var AnnounceCrawler = function(params) {
     this.config = inoodleUtil.deepCopy(params.config) || {};

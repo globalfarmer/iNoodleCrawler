@@ -32,7 +32,7 @@ var helpers = global.iNoodle.helpers = {};
       {
         logger.info(`[ANNOUNCE_CRAWLER >> DB] connecting ${config.db.host} successfully`);
         global.iNoodle.db = db;
-        announce.init();
+        announce.main();
       }
       else
       {

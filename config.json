@@ -49,9 +49,12 @@
             },
             "announce":
             {
-                "host": "uet.vnu.edu.vn",
-                "port": "80",
-                "method": "GET"
+                "options": {
+                  "host": "uet.vnu.edu.vn",
+                  "port": "80",
+                  "method": "GET",
+                  "path": "/coltech/taxonomy/term/53"
+                }
             },
             "finalTestSession":
             {
@@ -112,18 +115,21 @@
             },
             "announce":
             {
-            "host": "uet.vnu.edu.vn",
-            "port": "80",
-            "method": "GET"
+                "options": {
+                  "host": "uet.vnu.edu.vn",
+                  "port": "80",
+                  "method": "GET",
+                  "path": "/coltech/taxonomy/term/53"
+                }
             },
             "finalTestSession":
             {
-            "host": "112.137.129.87",
-            "port": "443",
-            "method": "POST",
-            "headers": {
-              "Content-Type": "application/x-www-form-urlencoded"
-            }
+                "host": "112.137.129.87",
+                "port": "443",
+                "method": "POST",
+                "headers": {
+                  "Content-Type": "application/x-www-form-urlencoded"
+                }
             }
         }
     }

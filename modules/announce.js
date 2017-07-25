@@ -32,11 +32,11 @@ AnnounceCrawler.prototype.parse = function() {
     this.hrefArr = [];
     $('.views-field-title').each((col, item) => {
         var announce = {
-            href: $('a', item).attr('href'),
+            link: [this.config.options.host, $('a', item).attr('href')].join(''),
             name: $('a', item).attr('title'),
         }
-        this.hrefArr.push(announce.href);
-        this.announces[announce.href] = announce;
+        this.hrefArr.push(announce.link);
+        this.announces[announce.link] = announce;
     });
     if( !production ) {
         logger.log( this.annouces );
@@ -56,11 +56,11 @@ AnnounceCrawler.prototype.saveToDB = function() {
         }
         else
         {
-            for(item of items) delete this.announces[item.href];
+            for(item of items) delete this.announces[item.link];
             var bulk = iNoodle.db.collection('announce').initializeUnorderedBulkOp();
             for(href of this.hrefArr.reverse()) {
                 if( this.announces[href] ) {
-                    this.announces[href].uploadTime = new Date();
+                    this.announces[href].uploadtime = new Date();
                     bulk.insert(this.announces[href]);
                 }
             }

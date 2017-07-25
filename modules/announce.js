@@ -32,7 +32,7 @@ AnnounceCrawler.prototype.parse = function() {
     this.hrefArr = [];
     $('.views-field-title').each((col, item) => {
         var announce = {
-            link: $('a', item).attr('href'),
+            link: [this.config.options.host, $('a', item).attr('href')].join(''),
             name: $('a', item).attr('title'),
         }
         this.hrefArr.push(announce.link);

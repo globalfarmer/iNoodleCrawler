@@ -60,7 +60,7 @@ AnnounceCrawler.prototype.saveToDB = function() {
             var bulk = iNoodle.db.collection('announce').initializeUnorderedBulkOp();
             for(href of this.hrefArr.reverse()) {
                 if( this.announces[href] ) {
-                    this.announces[href].uploadtime = new Date();
+                    this.announces[href].uploadTime = new Date();
                     bulk.insert(this.announces[href]);
                 }
             }

@@ -33,7 +33,7 @@ AnnounceCrawler.prototype.parse = function() {
     $('.views-field-title').each((col, item) => {
         var announce = {
             link: [this.config.options.host, $('a', item).attr('href')].join(''),
-            name: $('a', item).attr('title'),
+            name: $('.title_term', item).text(),
         }
         this.hrefArr.push(announce.link);
         this.announces[announce.link] = announce;
@@ -49,7 +49,7 @@ AnnounceCrawler.prototype.saveToDB = function() {
     var production = (iNoodle.env == 'production');
     var saveLabel = 'save_' + (new Date()).getTime();
     console.time(saveLabel);
-    iNoodle.db.collection('announce').find().sort({_id: -1}).limit(20).toArray((err, items) => {
+    iNoodle.db.collection('announce').find().sort({_id: -1}).limit(30).toArray((err, items) => {
         if( err )
         {
             logger.error(err);

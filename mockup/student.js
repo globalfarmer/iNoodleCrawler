@@ -11,7 +11,7 @@
             "code": "int31102",
             "name": "Phan tich thiet ke huong doi tuong",
             "group": "CL",
-            "credits": "3",
+            "credit": "3",
             "note": "DK lan dau",
             "term": "2016-2017-2",
             "version": "",

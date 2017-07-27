@@ -21,9 +21,23 @@
             },
             "slot":
             {
-                "host": "112.137.129.87",
-                "port": "443",
-                "method": "GET"
+                "discover":
+                {
+                    "host": "112.137.129.87",
+                    "port": "443",
+                    "method": "GET",
+                    "path": "/congdaotao/module/qldt/"
+                },
+                "options":
+                {
+                    "host": "112.137.129.87",
+                    "port": "443",
+                    "method": "GET",
+                    "path": "/congdaotao/module/qldt/index.php?r=sinhvienLmh/admin&"
+                },
+                "params":
+                {
+                }
             },
             "student":
             {
@@ -87,9 +101,23 @@
             },
             "slot":
             {
-                "host": "112.137.129.87",
-                "port": "443",
-                "method": "GET"
+                "discover":
+                {
+                    "host": "112.137.129.87",
+                    "port": "443",
+                    "method": "GET",
+                    "path": "/congdaotao/module/qldt/"
+                },
+                "options":
+                {
+                    "host": "112.137.129.87",
+                    "port": "443",
+                    "method": "GET",
+                    "path": "/congdaotao/module/qldt/index.php?r=sinhvienLmh/admin&"
+                },
+                "params":
+                {
+                }
             },
             "student":
             {
@@ -110,7 +138,7 @@
                 "params":
                 {
                     "SinhvienLmh_page": 1,
-                    "pageSize": 300
+                    "pageSize": 30
                 }
             },
             "announce":

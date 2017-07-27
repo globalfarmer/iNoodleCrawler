@@ -1,14 +1,11 @@
 var inoodleUtil = require('../utils/inoodleUtil.js');
-var fsUtil = require("./testUtil.js");
 var cheerio = require('cheerio');
 var querystring = require('querystring');
 var PERIOD = {
     DISCOVER_TIME: 2 * 60 * 60 * 1000,
     CRAWL_TIME: 20 * 60 * 1000
 }
-const FIELDS = {
-    config: "config"
-}
+
 var StudentCrawler = function(params = {}) {
     this.config = inoodleUtil.deepCopy(params.config) || {};
     this.packID = params._id;
@@ -87,12 +84,6 @@ StudentCrawler.prototype.saveToDB = function() {
             }
             var bulk = studentCollection.initializeUnorderedBulkOp();
             for(code in this.students) {
-                this.students[code].version =
-                {
-                    "slot": new Date(),
-                    "finaltest": new Date(),
-                    "session": new Date()
-                }
                 this.students[code].slots = {};
                 bulk.insert(this.students[code]);
             }

@@ -49,7 +49,7 @@ AnnounceCrawler.prototype.saveToDB = function() {
     var production = (iNoodle.env == 'production');
     var saveLabel = 'save_' + (new Date()).getTime();
     console.time(saveLabel);
-    iNoodle.db.collection('announce').find().sort({_id: -1}).limit(20).toArray((err, items) => {
+    iNoodle.db.collection('announce').find().sort({_id: -1}).limit(30).toArray((err, items) => {
         if( err )
         {
             logger.error(err);

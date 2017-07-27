@@ -5,11 +5,6 @@
     "sex": "male", // validate
     "birthday": Date(),
     "klass": "QH-2013-I/CQ-C-A",
-    "version": {
-        "slot": "",
-        "session": "",
-        "finaltest": "",
-    },
     "term": "2016-2017-2",
     "slots": {
         "int31102": {
@@ -19,10 +14,7 @@
             "credits": "3",
             "note": "DK lan dau",
             "term": "2016-2017-2",
-            "version": {
-                "start": "",
-                "end": "",
-            }
+            "version": "",
             "session": {
                 "2-1-3-cl": { // dayInWeek-session-group
                     "_id": "foreign key"
@@ -35,10 +27,7 @@
                 "area": "gd2",
                 "type": "Viet",
                 "daypart": "1",
-                "version": {
-                    "start": "",
-                    "end": ""
-                }
+                "version": "",
             },
             "scoreboard": {
                 "_id": "foreign key",

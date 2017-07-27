@@ -131,7 +131,7 @@ module.exports = {
     main: function() {
         var logger = iNoodle.logger;
         this.discover();
-        setInterval(() => this.discover, PERIOD.DISCOVER_TIME);
+        setInterval(() => this.discover(), PERIOD.DISCOVER_TIME);
         var crawler = function() {
             iNoodle.db.collection('student_pack').find().toArray((err, packs) => {
                 if( err ) {
